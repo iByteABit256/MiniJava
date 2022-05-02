@@ -1,26 +1,25 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SymbolTable {
 
-    private boolean invalid;
+    private ArrayList<Class> classTable = new ArrayList<>();
 
-    private HashMap<String, Class> classTable = new HashMap<String, Class>();
+    public SymbolTable(){
 
-    public boolean isInvalid() {
-        return invalid;
     }
 
-    public void setInvalid(boolean invalid) {
-        this.invalid = invalid;
+    public void addClass(Class c){
+        classTable.add(c);
     }
 
-    public HashMap<String, Class> getClassTable() {
+    public ArrayList<Class> getClassTable() {
         return classTable;
     }
 
     public void showClassTable(){
-        this.classTable.entrySet().forEach(entry -> {
-            System.out.println(entry.getKey() + " -> " + entry.getValue());
+        this.classTable.forEach(c -> {
+            System.out.print(c);
         });
     }
 
