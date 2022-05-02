@@ -8,5 +8,8 @@
 !Main.java
 !Makefile
 !SymbolTable.java
-!Type.java
+!MiniJavaDatatype.java
+!DatatypeMapper.java
 !Class.java
+!SymbolTableVisitor.java
+!Method.java
