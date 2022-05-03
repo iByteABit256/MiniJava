@@ -3,12 +3,12 @@ import java.util.HashMap;
 public class Class {
 
     private String name;
-    private HashMap<String, MiniJavaDatatype> fields;
-    private HashMap<String, Method> methods;
+    private HashMap<String, MiniJavaDatatype> fields = new HashMap<>();
+    private HashMap<String, Method> methods = new HashMap<>();
     private int currentFieldOffset = 0;
     private int currentMethodOffset = 0;
-    private HashMap<String, Integer> fieldOffsets;
-    private HashMap<String, Integer> methodOffsets;
+    private HashMap<String, Integer> fieldOffsets = new HashMap<>();
+    private HashMap<String, Integer> methodOffsets = new HashMap<>();
     private Class parent;
 
     public Class(){
@@ -79,6 +79,6 @@ public class Class {
 
     public void updateMethodOffsets(String str, Method method){
         methodOffsets.put(str, currentMethodOffset);
-        currentMethodOffset += DatatypeMapper.datatypeToBytes(method.getReturnType());
+        currentMethodOffset += DatatypeMapper.datatypeToBytes(MiniJavaDatatype.METHOD);
     }
 }

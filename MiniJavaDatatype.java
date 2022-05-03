@@ -1,8 +1,10 @@
 public enum MiniJavaDatatype {
     INT,
     BOOLEAN,
-    POINTER,
+    INT_POINTER,
+    BOOLEAN_POINTER,
+    STRING_POINTER,
+    METHOD,
+    VOID,
     INVALID
 }
-
-

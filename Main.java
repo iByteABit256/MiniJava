@@ -1,5 +1,5 @@
 import syntaxtree.*;
-import visitor.*;
+import visitor.GJDepthFirst;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -20,10 +20,11 @@ public class Main {
             Goal root = parser.Goal();
 
             System.err.println("Program parsed successfully.");
-
             SymbolTableVisitor stv = new SymbolTableVisitor();
             root.accept(stv, null);
-//            stv.showSymbolTable();
+            SymbolTable st = stv.getSymbolTable();
+            System.out.println("# of Classes: " + st.getClassTable().size());
+            stv.showSymbolTable();
         }
         catch(ParseException ex){
             System.out.println(ex.getMessage());

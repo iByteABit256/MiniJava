@@ -2,7 +2,7 @@ import java.util.LinkedHashMap;
 
 public class Method {
     private MiniJavaDatatype returnType;
-    private LinkedHashMap<String, MiniJavaDatatype> argumentTypes;
+    private LinkedHashMap<String, MiniJavaDatatype> argumentTypes = new LinkedHashMap<>();
 
     public MiniJavaDatatype getReturnType() {
         return returnType;

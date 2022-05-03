@@ -6,10 +6,13 @@ public class DatatypeMapper {
             case "boolean":
                 return MiniJavaDatatype.BOOLEAN;
             case "void":
+                return MiniJavaDatatype.VOID;
             case "int[]":
+                return MiniJavaDatatype.INT_POINTER;
             case "boolean[]":
+                return MiniJavaDatatype.BOOLEAN_POINTER;
             case "String[]":
-                return MiniJavaDatatype.POINTER;
+                return MiniJavaDatatype.STRING_POINTER;
             default:
                 return MiniJavaDatatype.INVALID;
         }
@@ -21,7 +24,7 @@ public class DatatypeMapper {
                 return 4;
             case BOOLEAN:
                 return 1;
-            case POINTER:
+            case INT_POINTER:case STRING_POINTER:case BOOLEAN_POINTER:case METHOD:
                 return 8;
             default:
                 return -1;
