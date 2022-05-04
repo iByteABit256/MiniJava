@@ -3,6 +3,7 @@ import syntaxtree.Type;
 import visitor.GJDepthFirst;
 
 import java.util.ArrayList;
+import java.util.Vector;
 
 public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
     private SymbolTable st = new SymbolTable();
@@ -63,6 +64,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
 
         st.addClass(mainClass);
         mainMethod.insertArgument(argsId, MiniJavaDatatype.STRING_POINTER);
+        mainMethod.setName("main");
         mainClass.insertMethod("main", mainMethod);
 
         return _ret;
@@ -78,12 +80,24 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      */
     public Object visit(ClassDeclaration n, Object argu) throws Exception {
         Object _ret=null;
+
+        Class c = new Class();
+
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
+        c.setName(n.f1.accept(this, argu).toString());
         n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
+        for(Node node : n.f3.nodes){
+            TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
+            c.insertField(pair.name, pair.type);
+        }
+        for(Node node : n.f4.nodes){
+            Method method = (Method) node.accept(this, argu);
+            c.insertMethod(method.getName(), method);
+        }
         n.f5.accept(this, argu);
+
+        st.addClass(c);
+
         return _ret;
     }
 
@@ -116,7 +130,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> ";"
      */
     public Object visit(VarDeclaration n, Object argu) throws Exception {
-        MiniJavaDatatype type = (MiniJavaDatatype)n.f0.accept(this, argu);
+        MiniJavaDatatype type = (MiniJavaDatatype) n.f0.accept(this, argu);
         String name = n.f1.accept(this, argu).toString();
         return new TypeIdentifierPair(type, name);
     }
@@ -137,12 +151,15 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * f12 -> "}"
      */
     public Object visit(MethodDeclaration n, Object argu) throws Exception {
-        Object _ret=null;
+        Method method = new Method();
+
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        method.setReturnType((MiniJavaDatatype) n.f1.accept(this, argu));
+        method.setName(n.f2.accept(this, argu).toString());
         n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
+        ArrayList<TypeIdentifierPair> args = n.f4.present()?
+                (ArrayList<TypeIdentifierPair>) n.f4.accept(this, argu) : new ArrayList<>();
+        method.insertArguments(args);
         n.f5.accept(this, argu);
         n.f6.accept(this, argu);
         n.f7.accept(this, argu);
@@ -151,7 +168,8 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         n.f10.accept(this, argu);
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
-        return _ret;
+
+        return method;
     }
 
     /**
@@ -160,9 +178,12 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      */
     public Object visit(FormalParameterList n, Object argu) throws Exception {
         ArrayList<TypeIdentifierPair> pairs = new ArrayList<>();
-        pairs.add((TypeIdentifierPair)n.f0.accept(this, argu));
-        n.f1.
-        return _ret;
+        pairs.add((TypeIdentifierPair) n.f0.accept(this, argu));
+        Vector<Node> nodes = (Vector<Node>) n.f1.accept(this, argu);
+        for(int i = 0; i < nodes.size(); i++){
+            pairs.add((TypeIdentifierPair) nodes.elementAt(i).accept(this, argu));
+        }
+        return pairs;
     }
 
     /**
@@ -170,7 +191,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> Identifier()
      */
     public Object visit(FormalParameter n, Object argu) throws Exception {
-        MiniJavaDatatype type = (MiniJavaDatatype)n.f0.accept(this, argu);
+        MiniJavaDatatype type = (MiniJavaDatatype) n.f0.accept(this, argu);
         String name = n.f1.accept(this, argu).toString();
         return new TypeIdentifierPair(type, name);
     }
@@ -179,7 +200,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> ( FormalParameterTerm() )*
      */
     public Object visit(FormalParameterTail n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return n.f0.nodes;
     }
 
     /**
