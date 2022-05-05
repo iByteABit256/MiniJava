@@ -4,23 +4,23 @@ import java.util.LinkedHashMap;
 public class Method {
     private String name;
 
-    private MiniJavaDatatype returnType;
+    private String returnType;
 
-    private LinkedHashMap<String, MiniJavaDatatype> argumentTypes = new LinkedHashMap<>();
+    private LinkedHashMap<String, String> argumentTypes = new LinkedHashMap<>();
 
-    public MiniJavaDatatype getReturnType() {
+    public String getReturnType() {
         return returnType;
     }
 
-    public void setReturnType(MiniJavaDatatype type) {
+    public void setReturnType(String type) {
         this.returnType = type;
     }
 
-    public LinkedHashMap<String, MiniJavaDatatype> getArgumentTypes() {
+    public LinkedHashMap<String, String> getArgumentTypes() {
         return argumentTypes;
     }
 
-    public void insertArgument(String str, MiniJavaDatatype type){
+    public void insertArgument(String str, String type){
         argumentTypes.put(str, type);
     }
 
