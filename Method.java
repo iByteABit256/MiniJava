@@ -20,11 +20,13 @@ public class Method {
         return argumentTypes;
     }
 
-    public void insertArgument(String str, String type){
-        argumentTypes.put(str, type);
+    public void insertArgument(String str, String type) throws MiniJavaException{
+        if(argumentTypes.put(str, type) != null){
+            throw new MiniJavaException("Argument with name \"" + str + "\" already exists.");
+        }
     }
 
-    public void insertArguments(ArrayList<TypeIdentifierPair> args){
+    public void insertArguments(ArrayList<TypeIdentifierPair> args) throws MiniJavaException{
         if(args.isEmpty()) return;
 
         for(TypeIdentifierPair arg : args){

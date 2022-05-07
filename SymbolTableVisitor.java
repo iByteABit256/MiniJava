@@ -21,6 +21,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * Parent class not existing
      * Same method names
      * Same field names
+     * Same method argument names
      */
 
     /**
