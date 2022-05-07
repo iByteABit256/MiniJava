@@ -1,5 +1,4 @@
 import syntaxtree.*;
-import visitor.GJDepthFirst;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

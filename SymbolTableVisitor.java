@@ -16,6 +16,11 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         return st;
     }
 
+    /** Checks implemented:
+     * Same class names
+     * Parent class not existing
+     */
+
     /**
      * f0 -> "class"
      * f1 -> Identifier()
@@ -85,6 +90,9 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
 
         n.f0.accept(this, argu);
         c.setName(n.f1.accept(this, argu).toString());
+        if(st.getClassTable().containsKey(c.getName())){
+            throw new MiniJavaException("Class with name \"" + c.getName() + "\" already exists.");
+        }
         n.f2.accept(this, argu);
         for(Node node : n.f3.nodes){
             TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
@@ -118,9 +126,17 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
 
         n.f0.accept(this, argu);
         c.setName(n.f1.accept(this, argu).toString());
+        if(st.getClassTable().containsKey(c.getName())){
+            throw new MiniJavaException("Class with name \"" + c.getName() + "\" already exists.");
+        }
         n.f2.accept(this, argu);
         String parentName = n.f3.accept(this, argu).toString();
-        c.setParent(st.getClassTable().stream().filter(cl -> cl.getName().equals(parentName)).findFirst().get());
+        Class parent = st.getClassTable().get(parentName);
+        if(parent != null) {
+            c.setParent(st.getClassTable().get(parentName));
+        }else{
+            throw new MiniJavaException("Parent class does not exist.");
+        }
         n.f4.accept(this, argu);
         for(Node node : n.f5.nodes){
             TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);

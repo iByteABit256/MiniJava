@@ -1,24 +1,24 @@
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 public class SymbolTable {
 
-    private ArrayList<Class> classTable = new ArrayList<>();
+    private LinkedHashMap<String, Class> classTable = new LinkedHashMap<>();
 
     public SymbolTable(){
 
     }
 
     public void addClass(Class c){
-        classTable.add(c);
+        classTable.put(c.getName(), c);
     }
 
-    public ArrayList<Class> getClassTable() {
+    public LinkedHashMap<String, Class> getClassTable() {
         return classTable;
     }
 
     public void showClassTable(){
-        this.classTable.forEach(c -> {
-            System.out.print(c);
+        this.classTable.entrySet().forEach(c -> {
+            System.out.print(c.getValue());
         });
     }
 
