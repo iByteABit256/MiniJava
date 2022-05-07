@@ -19,6 +19,8 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
     /** Checks implemented:
      * Same class names
      * Parent class not existing
+     * Same method names
+     * Same field names
      */
 
     /**
@@ -96,10 +98,16 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         n.f2.accept(this, argu);
         for(Node node : n.f3.nodes){
             TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
+            if(c.getFields().containsKey(pair.name)){
+                throw new MiniJavaException("Field with name \"" + pair.name + "\" already exists.");
+            }
             c.insertField(pair.name, pair.type);
         }
         for(Node node : n.f4.nodes){
             Method method = (Method) node.accept(this, argu);
+            if(c.getMethods().containsKey(method.getName())){
+                throw new MiniJavaException("Method with name \"" + method.getName() + "\" already exists");
+            }
             c.insertMethod(method.getName(), method);
         }
         n.f5.accept(this, argu);
@@ -140,10 +148,16 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         n.f4.accept(this, argu);
         for(Node node : n.f5.nodes){
             TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
+            if(c.getFields().containsKey(pair.name)){
+                throw new MiniJavaException("Field with name \"" + pair.name + "\" already exists.");
+            }
             c.insertField(pair.name, pair.type);
         }
         for(Node node : n.f6.nodes){
             Method method = (Method) node.accept(this, argu);
+            if(c.getMethods().containsKey(method.getName())){
+                throw new MiniJavaException("Method with name \"" + method.getName() + "\" already exists");
+            }
             c.insertMethod(method.getName(), method);
         }
         n.f7.accept(this, argu);
