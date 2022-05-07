@@ -113,14 +113,27 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      */
     public Object visit(ClassExtendsDeclaration n, Object argu) throws Exception {
         Object _ret=null;
+
+        Class c = new Class();
+
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
+        c.setName(n.f1.accept(this, argu).toString());
         n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
+        String parentName = n.f3.accept(this, argu).toString();
+        c.setParent(st.getClassTable().stream().filter(cl -> cl.getName().equals(parentName)).findFirst().get());
         n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        n.f6.accept(this, argu);
+        for(Node node : n.f5.nodes){
+            TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
+            c.insertField(pair.name, pair.type);
+        }
+        for(Node node : n.f6.nodes){
+            Method method = (Method) node.accept(this, argu);
+            c.insertMethod(method.getName(), method);
+        }
         n.f7.accept(this, argu);
+
+        st.addClass(c);
+
         return _ret;
     }
 
