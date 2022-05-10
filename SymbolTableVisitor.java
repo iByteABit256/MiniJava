@@ -24,6 +24,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * Same method argument names
      * Same local variable names
      * Local variable with same name as method argument
+     * Overloaded methods are valid
      */
 
     /**
@@ -165,6 +166,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         }
         n.f7.accept(this, argu);
 
+        c.canExtendParent();
         st.addClass(c);
 
         return _ret;

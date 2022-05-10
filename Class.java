@@ -84,4 +84,15 @@ public class Class {
         methodOffsets.put(str, currentMethodOffset);
         currentMethodOffset += DatatypeMapper.datatypeToBytes("method");
     }
+
+    public void canExtendParent() throws MiniJavaException{
+        for(Method childMethod : methods.values()){
+            Method parentMethod = parent.getMethods().get(childMethod.getName());
+            if(parentMethod == null) continue;
+
+            if(!childMethod.canOverload(parentMethod)){
+                throw new MiniJavaException("Method " + childMethod.getName() + " cannot overload parent method.");
+            }
+        }
+    }
 }

@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 
 public class Method {
@@ -61,5 +62,19 @@ public class Method {
         for(TypeIdentifierPair var : vars){
             insertLocalVariable(var.name, var.type);
         }
+    }
+
+    public boolean canOverload(Method m){
+        if(argumentTypes.size() != m.getArgumentTypes().size()){
+            return false;
+        }
+        ArrayList<String> types = new ArrayList<>(argumentTypes.values());
+        ArrayList<String> parentTypes = new ArrayList<>(m.getArgumentTypes().values());
+        for(int i = 0; i < types.size(); i++){
+            if(!types.get(i).equals(parentTypes.get(i))){
+                return false;
+            }
+        }
+        return returnType == m.getReturnType();
     }
 }
