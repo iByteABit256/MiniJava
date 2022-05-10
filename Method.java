@@ -8,6 +8,8 @@ public class Method {
 
     private LinkedHashMap<String, String> argumentTypes = new LinkedHashMap<>();
 
+    private LinkedHashMap<String, String> localVariableTypes = new LinkedHashMap<>();
+
     public String getReturnType() {
         return returnType;
     }
@@ -40,5 +42,24 @@ public class Method {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public LinkedHashMap<String, String> getLocalVariableTypes() {
+        return localVariableTypes;
+    }
+
+    public void insertLocalVariable(String str, String type) throws MiniJavaException{
+        if(localVariableTypes.containsKey(str) || argumentTypes.containsKey(str)){
+            throw new MiniJavaException("Local variable with name \"" + str + "\" already exists.");
+        }
+        localVariableTypes.put(str, type);
+    }
+
+    public void insertLocalVariables(ArrayList<TypeIdentifierPair> vars) throws MiniJavaException{
+        if(vars.isEmpty()) return;
+
+        for(TypeIdentifierPair var : vars){
+            insertLocalVariable(var.name, var.type);
+        }
     }
 }

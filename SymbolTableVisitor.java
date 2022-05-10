@@ -22,6 +22,8 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * Same method names
      * Same field names
      * Same method argument names
+     * Same local variable names
+     * Local variable with same name as method argument
      */
 
     /**
@@ -206,7 +208,10 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         method.insertArguments(args);
         n.f5.accept(this, argu);
         n.f6.accept(this, argu);
-        n.f7.accept(this, argu);
+        for(Node node : n.f7.nodes){
+            TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
+            method.insertLocalVariable(pair.name, pair.type);
+        }
         n.f8.accept(this, argu);
         n.f9.accept(this, argu);
         n.f10.accept(this, argu);
