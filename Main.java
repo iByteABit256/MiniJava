@@ -17,12 +17,16 @@ public class Main {
             MiniJavaParser parser = new MiniJavaParser(fis);
 
             Goal root = parser.Goal();
-
             System.err.println("Program parsed successfully.");
+
             SymbolTableVisitor stv = new SymbolTableVisitor();
             root.accept(stv, null);
             SymbolTable st = stv.getSymbolTable();
             System.out.println("# of Classes: " + st.getClassTable().size());
+
+            TypeCheckVisitor tcv = new TypeCheckVisitor(st);
+            root.accept(tcv, null);
+
             stv.showSymbolTable();
         }
         catch(ParseException ex){
