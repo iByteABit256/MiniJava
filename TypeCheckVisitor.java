@@ -5,12 +5,6 @@
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 
-import java.util.*;
-
-/**
- * Provides default methods which visit each node in the tree in depth-first
- * order.  Your visitors may extend this class.
- */
 public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
 
     private SymbolTable st;
@@ -18,6 +12,11 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
     public TypeCheckVisitor(SymbolTable st){
         this.st = st;
     }
+
+    /** Checks implemented:
+     * Array index is of type 'int'
+     * length attribute on valid types
+     */
 
     /**
      * f0 -> MainClass()
@@ -235,11 +234,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> "]"
      */
     public Object visit(BooleanArrayType n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        return "boolean[]";
     }
 
     /**
@@ -248,25 +243,21 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> "]"
      */
     public Object visit(IntegerArrayType n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        return "int[]";
     }
 
     /**
      * f0 -> "boolean"
      */
     public Object visit(BooleanType n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return "boolean";
     }
 
     /**
      * f0 -> "int"
      */
     public Object visit(IntegerType n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return "int";
     }
 
     /**
@@ -472,12 +463,12 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> "]"
      */
     public Object visit(ArrayLookup n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        return _ret;
+        String type = (String) n.f0.accept(this, argu);
+        String index_type = (String) n.f2.accept(this, argu);
+        if(!index_type.equals("int")){
+            throw new MiniJavaException("Invalid index type");
+        }
+        return type;
     }
 
     /**
@@ -486,11 +477,12 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> "length"
      */
     public Object visit(ArrayLength n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        String type = (String) n.f0.accept(this, argu);
+        if(!type.matches("int\\[]|boolean\\[]")){
+            throw new MiniJavaException("No length attribute for type " + type);
+        }
+
+        return "int";
     }
 
     /**
@@ -567,21 +559,21 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> <INTEGER_LITERAL>
      */
     public Object visit(IntegerLiteral n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return "int";
     }
 
     /**
      * f0 -> "true"
      */
     public Object visit(TrueLiteral n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return "boolean";
     }
 
     /**
      * f0 -> "false"
      */
     public Object visit(FalseLiteral n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return "boolean";
     }
 
     /**
