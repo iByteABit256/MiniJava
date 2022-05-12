@@ -12,20 +12,22 @@ public class Main {
         }
 
         FileInputStream fis = null;
+        FileInputStream fis2 = null;
         try{
             fis = new FileInputStream(args[0]);
             MiniJavaParser parser = new MiniJavaParser(fis);
-
             Goal root = parser.Goal();
             System.err.println("Program parsed successfully.");
-
             SymbolTableVisitor stv = new SymbolTableVisitor();
             root.accept(stv, null);
             SymbolTable st = stv.getSymbolTable();
             System.out.println("# of Classes: " + st.getClassTable().size());
 
+            fis2 = new FileInputStream(args[0]);
+            MiniJavaParser parser2 = new MiniJavaParser(fis2);
+            Goal root2 = parser2.Goal();
             TypeCheckVisitor tcv = new TypeCheckVisitor(st);
-            root.accept(tcv, null);
+            root2.accept(tcv, null);
 
             stv.showSymbolTable();
         }
@@ -38,6 +40,7 @@ public class Main {
         finally{
             try{
                 if(fis != null) fis.close();
+                if(fis2 != null) fis2.close();
             }
             catch(IOException ex){
                 System.err.println(ex.getMessage());

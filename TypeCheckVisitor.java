@@ -5,9 +5,12 @@
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 
+import java.util.HashMap;
+
 public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
 
     private SymbolTable st;
+    private ContextManager cm = new ContextManager();
 
     public TypeCheckVisitor(SymbolTable st){
         this.st = st;
@@ -18,20 +21,8 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * length attribute on valid types
      * Valid types for all arithmetic and logical operations
      * Valid condition expressions for while-loops and if-statements
+     * A shit ton more
      */
-
-    /**
-     * f0 -> MainClass()
-     * f1 -> ( TypeDeclaration() )*
-     * f2 -> <EOF>
-     */
-    public Object visit(Goal n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
-    }
 
     /**
      * f0 -> "class"
@@ -54,9 +45,10 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f17 -> "}"
      */
     public Object visit(MainClass n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
+        String mainClassName = getNameFromPair(n.f1.accept(this, argu));
+        Class mainClass = st.getClassTable().get(mainClassName);
+        cm.enterContext(mainClass);
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
@@ -69,19 +61,14 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
         n.f13.accept(this, argu);
+        cm.enterContext(mainClass.getMethods().get("main"));
         n.f14.accept(this, argu);
         n.f15.accept(this, argu);
         n.f16.accept(this, argu);
+        cm.leaveContext();
+        cm.leaveContext();
         n.f17.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> ClassDeclaration()
-     *       | ClassExtendsDeclaration()
-     */
-    public Object visit(TypeDeclaration n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return null;
     }
 
     /**
@@ -93,14 +80,16 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f5 -> "}"
      */
     public Object visit(ClassDeclaration n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
+        String className = getNameFromPair(n.f1.accept(this, argu));
+        Class c = st.getClassTable().get(className);
+        cm.enterContext(c);
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
-        return _ret;
+        cm.leaveContext();
+        return null;
     }
 
     /**
@@ -114,16 +103,18 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f7 -> "}"
      */
     public Object visit(ClassExtendsDeclaration n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
+        String className = getNameFromPair(n.f1.accept(this, argu));
+        Class c = st.getClassTable().get(className);
+        cm.enterContext(c);
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
         n.f6.accept(this, argu);
         n.f7.accept(this, argu);
-        return _ret;
+        cm.leaveContext();
+        return null;
     }
 
     /**
@@ -155,10 +146,11 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f12 -> "}"
      */
     public Object visit(MethodDeclaration n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        String methodName = getNameFromPair(n.f2.accept(this, argu));
+        Method m = cm.getClassCtx().getMethods().get(methodName);
+        cm.enterContext(m);
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
@@ -169,7 +161,8 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         n.f10.accept(this, argu);
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
-        return _ret;
+        cm.leaveContext();
+        return null;
     }
 
     /**
@@ -294,7 +287,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> ";"
      */
     public Object visit(AssignmentStatement n, Object argu) throws Exception {
-        String type = (String) n.f0.accept(this, argu);
+        String type = getTypeFromPair(n.f0.accept(this, argu));
         n.f1.accept(this, argu);
         String valueType = (String) n.f2.accept(this, argu);
         if(!type.equals(valueType)){
@@ -314,7 +307,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f6 -> ";"
      */
     public Object visit(ArrayAssignmentStatement n, Object argu) throws Exception {
-        String arrayType = (String) n.f0.accept(this, argu);
+        String arrayType = getTypeFromPair(n.f0.accept(this, argu));
         n.f1.accept(this, argu);
         String index_type = (String) n.f2.accept(this, argu);
         if(!index_type.equals("int")){
@@ -517,14 +510,20 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f5 -> ")"
      */
     public Object visit(MessageSend n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        String type = (String) n.f0.accept(this, argu);
+        if(!isClass(type)){
+            throw new MiniJavaException("Dot operator only usable on non-primitive types");
+        }
+        Class c = st.getClassTable().get(type);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        String methodName = (String) n.f2.accept(this, argu);
+        if(!c.getMethods().containsKey(methodName)){
+            throw new MiniJavaException("No method " + methodName + " on class " + type);
+        }
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
-        return _ret;
+        return null;
     }
 
     /**
@@ -575,7 +574,11 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      *       | BracketExpression()
      */
     public Object visit(PrimaryExpression n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        Object o = n.f0.accept(this, argu);
+        if(o instanceof TypeIdentifierPair){
+            return getTypeFromPair(o);
+        }
+        return o;
     }
 
     /**
@@ -602,15 +605,32 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> <IDENTIFIER>
      */
-    public Object visit(Identifier n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+    public TypeIdentifierPair visit(Identifier n, Object argu) throws Exception {
+        String id = n.f0.toString();
+        Class classContext = cm.getClassCtx();
+        Method methodContext = cm.getMethodCtx();
+        if(methodContext != null){
+            HashMap<String, String> localVars = methodContext.getLocalVariableTypes();
+            HashMap<String, String> args = methodContext.getArgumentTypes();
+            if(localVars.containsKey(id)) return new TypeIdentifierPair(localVars.get(id), id);
+            if(args.containsKey(id)) return new TypeIdentifierPair(args.get(id), id);
+        }else if(classContext != null){
+            HashMap<String, String> classFields = classContext.getFields();
+            if(classFields.containsKey(id)) return new TypeIdentifierPair(classFields.get(id), id);
+        }
+        return new TypeIdentifierPair("", id);
     }
+
 
     /**
      * f0 -> "this"
      */
     public Object visit(ThisExpression n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        Class c = cm.getClassCtx();
+        if(c == null){
+            throw new MiniJavaException("\"this\" refers to no class");
+        }
+        return c.getName();
     }
 
     /**
@@ -629,13 +649,15 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f4 -> "]"
      */
     public Object visit(BooleanArrayAllocationExpression n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
+        String type = (String) n.f3.accept(this, argu);
+        if(!type.equals("int")){
+            throw new MiniJavaException(type + " is not a valid array size type");
+        }
         n.f4.accept(this, argu);
-        return _ret;
+        return "boolean[]";
     }
 
     /**
@@ -646,13 +668,15 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f4 -> "]"
      */
     public Object visit(IntegerArrayAllocationExpression n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
+        String type = (String) n.f3.accept(this, argu);
+        if(!type.equals("int")){
+            throw new MiniJavaException(type + " is not a valid array size type");
+        }
         n.f4.accept(this, argu);
-        return _ret;
+        return "int[]";
     }
 
     /**
@@ -662,12 +686,14 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> ")"
      */
     public Object visit(AllocationExpression n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
+        String className = (String) n.f1.accept(this, argu);
+        if(!st.getClassTable().containsKey(className)){
+            throw new MiniJavaException("Class with name " + className + " was not declared");
+        }
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
-        return _ret;
+        return className;
     }
 
     /**
@@ -694,6 +720,30 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
         return _ret;
+    }
+
+    private String getNameFromPair(Object o) throws Exception{
+        try {
+            TypeIdentifierPair pair = (TypeIdentifierPair) o;
+            return pair.name;
+        }catch(Exception e){
+            System.err.println(e);
+            return "";
+        }
+    }
+
+    private String getTypeFromPair(Object o) throws Exception{
+        try {
+            TypeIdentifierPair pair = (TypeIdentifierPair) o;
+            return pair.type;
+        }catch(Exception e){
+            System.err.println(e);
+            return "";
+        }
+    }
+
+    private boolean isClass(String type){
+        return !type.matches("int|boolean|int\\[]|boolean\\[]");
     }
 
 }
