@@ -21,7 +21,10 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * length attribute on valid types
      * Valid types for all arithmetic and logical operations
      * Valid condition expressions for while-loops and if-statements
-     * A shit ton more
+     * Valid assignment type to variable
+     * Method after dot operator exists
+     * Valid expression for array size declaration
+     * Constructor called on declared classes
      */
 
     /**
@@ -337,7 +340,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         n.f1.accept(this, argu);
         String type = (String) n.f2.accept(this, argu);
         if(!type.equals("boolean")){
-            throw new MiniJavaException("Invalid while-loop condition");
+            throw new MiniJavaException("Invalid if-statement condition");
         }
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
@@ -511,19 +514,19 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      */
     public Object visit(MessageSend n, Object argu) throws Exception {
         String type = (String) n.f0.accept(this, argu);
-        if(!isClass(type)){
-            throw new MiniJavaException("Dot operator only usable on non-primitive types");
-        }
+//        if(!isClass(type)){
+//            throw new MiniJavaException("Dot operator only usable on non-primitive types");
+//        }
         Class c = st.getClassTable().get(type);
         n.f1.accept(this, argu);
-        String methodName = (String) n.f2.accept(this, argu);
+        String methodName = getNameFromPair(n.f2.accept(this, argu));
         if(!c.getMethods().containsKey(methodName)){
             throw new MiniJavaException("No method " + methodName + " on class " + type);
         }
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
-        return null;
+        return c.getMethods().get(methodName).getReturnType();
     }
 
     /**
@@ -609,12 +612,13 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         String id = n.f0.toString();
         Class classContext = cm.getClassCtx();
         Method methodContext = cm.getMethodCtx();
-        if(methodContext != null){
+        if(methodContext != null) {
             HashMap<String, String> localVars = methodContext.getLocalVariableTypes();
             HashMap<String, String> args = methodContext.getArgumentTypes();
-            if(localVars.containsKey(id)) return new TypeIdentifierPair(localVars.get(id), id);
-            if(args.containsKey(id)) return new TypeIdentifierPair(args.get(id), id);
-        }else if(classContext != null){
+            if (localVars.containsKey(id)) return new TypeIdentifierPair(localVars.get(id), id);
+            if (args.containsKey(id)) return new TypeIdentifierPair(args.get(id), id);
+        }
+        if(classContext != null){
             HashMap<String, String> classFields = classContext.getFields();
             if(classFields.containsKey(id)) return new TypeIdentifierPair(classFields.get(id), id);
         }
@@ -628,7 +632,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
     public Object visit(ThisExpression n, Object argu) throws Exception {
         Class c = cm.getClassCtx();
         if(c == null){
-            throw new MiniJavaException("\"this\" refers to no class");
+            throw new MiniJavaException("Internal Error: \"this\" refers to no class");
         }
         return c.getName();
     }
@@ -687,7 +691,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      */
     public Object visit(AllocationExpression n, Object argu) throws Exception {
         n.f0.accept(this, argu);
-        String className = (String) n.f1.accept(this, argu);
+        String className = getNameFromPair(n.f1.accept(this, argu));
         if(!st.getClassTable().containsKey(className)){
             throw new MiniJavaException("Class with name " + className + " was not declared");
         }

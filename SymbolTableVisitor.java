@@ -48,8 +48,6 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * f17 -> "}"
      */
     public Object visit(MainClass n, Object argu) throws Exception {
-        Object _ret=null;
-
         Class mainClass = new Class();
         Method mainMethod = new Method();
 
@@ -68,7 +66,13 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         String argsId = n.f11.toString();
         n.f12.accept(this, argu);
         n.f13.accept(this, argu);
-        n.f14.accept(this, argu);
+        for(Node node : n.f14.nodes){
+            TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
+            if(mainClass.getFields().containsKey(pair.name)){
+                throw new MiniJavaException("Field with name \"" + pair.name + "\" already exists.");
+            }
+            mainClass.insertField(pair.name, pair.type);
+        }
         n.f15.accept(this, argu);
         n.f16.accept(this, argu);
         n.f17.accept(this, argu);
@@ -78,7 +82,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         mainMethod.setName("main");
         mainClass.insertMethod("main", mainMethod);
 
-        return _ret;
+        return null;
     }
 
     /**
