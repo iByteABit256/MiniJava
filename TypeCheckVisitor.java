@@ -16,6 +16,8 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
     /** Checks implemented:
      * Array index is of type 'int'
      * length attribute on valid types
+     * Valid types for all arithmetic and logical operations
+     * Valid condition expressions for while-loops and if-statements
      */
 
     /**
@@ -292,12 +294,14 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> ";"
      */
     public Object visit(AssignmentStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        String type = (String) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        String valueType = (String) n.f2.accept(this, argu);
+        if(!type.equals(valueType)){
+            throw new MiniJavaException("Cannot assign value of type " + valueType + " to variable of type " + type);
+        }
         n.f3.accept(this, argu);
-        return _ret;
+        return null;
     }
 
     /**
@@ -310,15 +314,20 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f6 -> ";"
      */
     public Object visit(ArrayAssignmentStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        String arrayType = (String) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        String index_type = (String) n.f2.accept(this, argu);
+        if(!index_type.equals("int")){
+            throw new MiniJavaException("Invalid index type");
+        }
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
+        String valueType = (String) n.f5.accept(this, argu);
+        if(!arrayType.equals(valueType)){
+            throw new MiniJavaException("Cannot insert value of type " + valueType + " to array of type " + arrayType);
+        }
         n.f6.accept(this, argu);
-        return _ret;
+        return null;
     }
 
     /**
@@ -331,15 +340,17 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f6 -> Statement()
      */
     public Object visit(IfStatement n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        String type = (String) n.f2.accept(this, argu);
+        if(!type.equals("boolean")){
+            throw new MiniJavaException("Invalid while-loop condition");
+        }
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
         n.f6.accept(this, argu);
-        return _ret;
+        return null;
     }
 
     /**
@@ -350,13 +361,15 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f4 -> Statement()
      */
     public Object visit(WhileStatement n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        String type = (String) n.f2.accept(this, argu);
+        if(!type.equals("boolean")){
+            throw new MiniJavaException("Invalid while-loop condition");
+        }
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
-        return _ret;
+        return null;
     }
 
     /**
@@ -397,11 +410,13 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> Clause()
      */
     public Object visit(AndExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        String type1 = (String) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        String type2 = (String) n.f2.accept(this, argu);
+        if(!type1.equals("boolean") || !type2.equals("boolean")){
+            throw new MiniJavaException("Invalid types for operation && : " + type1 + " , " + type2);
+        }
+        return "boolean";
     }
 
     /**
@@ -410,11 +425,13 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> PrimaryExpression()
      */
     public Object visit(CompareExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        String type1 = (String) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        String type2 = (String) n.f2.accept(this, argu);
+        if(!type1.equals("int") || !type2.equals("int")){
+            throw new MiniJavaException("Invalid types for operation < : " + type1 + " , " + type2);
+        }
+        return "boolean";
     }
 
     /**
@@ -423,11 +440,13 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> PrimaryExpression()
      */
     public Object visit(PlusExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        String type1 = (String) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        String type2 = (String) n.f2.accept(this, argu);
+        if(!type1.equals("int") || !type2.equals("int")){
+            throw new MiniJavaException("Invalid types for operation + : " + type1 + " , " + type2);
+        }
+        return "int";
     }
 
     /**
@@ -436,11 +455,13 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> PrimaryExpression()
      */
     public Object visit(MinusExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        String type1 = (String) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        String type2 = (String) n.f2.accept(this, argu);
+        if(!type1.equals("int") || !type2.equals("int")){
+            throw new MiniJavaException("Invalid types for operation - : " + type1 + " , " + type2);
+        }
+        return "int";
     }
 
     /**
@@ -449,11 +470,13 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> PrimaryExpression()
      */
     public Object visit(TimesExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        String type1 = (String) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        String type2 = (String) n.f2.accept(this, argu);
+        if(!type1.equals("int") || !type2.equals("int")){
+            throw new MiniJavaException("Invalid types for operation * : " + type1 + " , " + type2);
+        }
+        return "int";
     }
 
     /**
@@ -652,10 +675,12 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> Clause()
      */
     public Object visit(NotExpression n, Object argu) throws Exception {
-        Object _ret=null;
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        return _ret;
+        String type1 = (String) n.f1.accept(this, argu);
+        if(!type1.equals("boolean")){
+            throw new MiniJavaException("Invalid type for operation ! : " + type1);
+        }
+        return "boolean";
     }
 
     /**
