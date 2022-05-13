@@ -301,7 +301,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         String type = getTypeFromPair(n.f0.accept(this, argu));
         n.f1.accept(this, argu);
         String valueType = (String) n.f2.accept(this, argu);
-        if(!type.equals(valueType)){
+        if(!typesMatch(type, valueType)){
             throw new MiniJavaException("Cannot assign value of type " + valueType + " to variable of type " + type);
         }
         n.f3.accept(this, argu);
@@ -327,7 +327,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         String valueType = (String) n.f5.accept(this, argu);
-        if(!arrayType.replace("[]", "").equals(valueType)){
+        if(!typesMatch(arrayType.replace("[]", ""), valueType)){
             throw new MiniJavaException("Cannot insert value of type " + valueType + " to array of type " + arrayType);
         }
         n.f6.accept(this, argu);
@@ -528,10 +528,10 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         Class c = st.getClassTable().get(type);
         n.f1.accept(this, argu);
         String methodName = getNameFromPair(n.f2.accept(this, argu));
-        if(!c.getMethods().containsKey(methodName)){
+        Method m = findMethod(c, methodName);
+        if(m == null){
             throw new MiniJavaException("No method " + methodName + " on class " + type);
         }
-        Method m = c.getMethods().get(methodName);
         ArrayList<String> actualTypes = new ArrayList<>(m.getArgumentTypes().values());
         n.f3.accept(this, argu);
         ArrayList<String> types = n.f4.present()?
@@ -543,12 +543,12 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         }
 
         for(int i = 0; i < types.size(); i++){
-            if(types.get(i) != actualTypes.get(i)){
+            if(!typesMatch(actualTypes.get(i), types.get(i))){
                 throw new MiniJavaException("Argument " + i + " expected " + actualTypes.get(i) + " but was " + types.get(i));
             }
         }
         n.f5.accept(this, argu);
-        return c.getMethods().get(methodName).getReturnType();
+        return m.getReturnType();
     }
 
     /**
@@ -786,6 +786,39 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
             System.err.println(e);
             return "";
         }
+    }
+
+    private Method findMethod(Class c, String methodName){
+        if(!c.getMethods().containsKey(methodName)){
+            Class parent = c.getParent();
+            while(parent != null){
+                if(parent.getMethods().containsKey(methodName)){
+                    return parent.getMethods().get(methodName);
+                }
+                parent = parent.getParent();
+            }
+            return null;
+        }
+        return c.getMethods().get(methodName);
+    }
+
+    private boolean typesMatch(String a, String b){
+        if(!a.equals(b)){
+            Class c = st.getClassTable().get(b);
+            System.out.println("Found class " + c.getName());
+            if(c != null){
+                Class parent = c.getParent();
+                while(parent != null){
+                    System.out.println("Comparing " + a + " with " + parent.getName());
+                    if(a.equals(parent.getName())){
+                        return true;
+                    }
+                    parent = parent.getParent();
+                }
+            }
+            return false;
+        }
+        return true;
     }
 
 }
