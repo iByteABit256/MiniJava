@@ -63,23 +63,20 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         n.f8.accept(this, argu);
         n.f9.accept(this, argu);
         n.f10.accept(this, argu);
-        String argsId = n.f11.toString();
+        String argsId = n.f11.accept(this, argu).toString();
         n.f12.accept(this, argu);
         n.f13.accept(this, argu);
         for(Node node : n.f14.nodes){
             TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
-            if(mainClass.getFields().containsKey(pair.name)){
-                throw new MiniJavaException("Field with name \"" + pair.name + "\" already exists.");
-            }
-            mainClass.insertField(pair.name, pair.type);
+            mainMethod.insertLocalVariable(pair.name, pair.type);
         }
         n.f15.accept(this, argu);
         n.f16.accept(this, argu);
         n.f17.accept(this, argu);
 
         st.addClass(mainClass);
-        mainMethod.insertArgument(argsId, "String[]");
         mainMethod.setName("main");
+        mainMethod.insertArgument(argsId, "String[]");
         mainClass.insertMethod("main", mainMethod);
 
         return null;
