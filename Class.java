@@ -15,15 +15,6 @@ public class Class {
 
     }
 
-    private boolean parentContainsField(String id){
-        Class currentParent = parent;
-        while(currentParent != null){
-            if(currentParent.getFields().containsKey(id)) return true;
-            currentParent = currentParent.getParent();
-        }
-        return false;
-    }
-
     private boolean parentContainsMethod(String id){
         Class currentParent = parent;
         while(currentParent != null){
@@ -66,10 +57,6 @@ public class Class {
         return methods;
     }
 
-    public void setMethods(LinkedHashMap<String, Method> methods) {
-        this.methods = methods;
-    }
-
     public void insertMethod(String str, Method method){
         methods.put(str, method);
         updateMethodOffsets(str);
@@ -79,7 +66,7 @@ public class Class {
         return parent;
     }
 
-    public void setParent(Class parent) throws MiniJavaException{
+    public void setParent(Class parent){
         this.parent = parent;
         currentFieldOffset = parent.currentFieldOffset;
         currentMethodOffset = parent.currentMethodOffset;

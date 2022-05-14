@@ -6,5 +6,5 @@ compile:
 	javac -d out/production/Compilers2 Main.java
 
 clean:
-	rm -f out/production/Compilers2/* *~
+	rm -rf minijava-jtb.jj visitor syntaxtree JavaCharStream.java MiniJavaParser* ParseException.java Token.java TokenMgrError.java out/production/Compilers2/* *~
 

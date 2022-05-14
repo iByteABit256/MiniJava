@@ -27,6 +27,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * Method parameters have right number and type
      * Returned value matches return type
      * Only ints are printable
+     * Identifier was declared
      */
 
     /**
