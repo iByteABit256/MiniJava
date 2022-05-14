@@ -18,7 +18,9 @@ public class SymbolTable {
 
     public void showClassTable(){
         this.classTable.entrySet().forEach(c -> {
-            System.out.print(c.getValue());
+            if(!c.getValue().getMethods().containsKey("main")){
+                System.out.print(c.getValue());
+            }
         });
     }
 

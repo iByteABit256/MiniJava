@@ -29,6 +29,8 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      * Constructor called on declared classes
      * Cannot access index of non-array type
      * Method parameters have right number and type
+     * Returned value matches return type
+     * Only ints are printable
      */
 
     /**
@@ -158,7 +160,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      */
     public Object visit(MethodDeclaration n, Object argu) throws Exception {
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
+        String returnType = (String) n.f1.accept(this, argu);
         String methodName = getNameFromPair(n.f2.accept(this, argu));
         Method m = cm.getClassCtx().getMethods().get(methodName);
         cm.enterContext(m);
@@ -169,7 +171,10 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         n.f7.accept(this, argu);
         n.f8.accept(this, argu);
         n.f9.accept(this, argu);
-        n.f10.accept(this, argu);
+        String type = (String) n.f10.accept(this, argu);
+        if(!typesMatch(returnType, type)){
+            throw new MiniJavaException("Return type is " + returnType + " but " + type + " was returned");
+        }
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
         cm.leaveContext();
@@ -223,7 +228,11 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      *       | Identifier()
      */
     public Object visit(Type n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        Object o = n.f0.accept(this, argu);
+        if(o instanceof TypeIdentifierPair){
+            return getTypeFromPair(o);
+        }
+        return o;
     }
 
     /**
@@ -301,6 +310,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         String type = getTypeFromPair(n.f0.accept(this, argu));
         n.f1.accept(this, argu);
         String valueType = (String) n.f2.accept(this, argu);
+        System.out.println("Comparing " + type + " with " + valueType);
         if(!typesMatch(type, valueType)){
             throw new MiniJavaException("Cannot assign value of type " + valueType + " to variable of type " + type);
         }
@@ -387,7 +397,10 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         Object _ret=null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        String type = (String) n.f2.accept(this, argu);
+        if(!isPrintable(type)){
+            throw new MiniJavaException("Type " + type + " is not printable");
+        }
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         return _ret;
@@ -660,7 +673,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
             }
         }
         // Check if identifier is a class or method
-        if(st.getClassTable().containsKey(id)) return new TypeIdentifierPair("class", id);
+        if(st.getClassTable().containsKey(id)) return new TypeIdentifierPair(id, id);
         for(Class c : st.getClassTable().values()){
             if(c.getMethods().containsKey(id)) return new TypeIdentifierPair("method", id);
         }
@@ -805,8 +818,8 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
     private boolean typesMatch(String a, String b){
         if(!a.equals(b)){
             Class c = st.getClassTable().get(b);
-            System.out.println("Found class " + c.getName());
             if(c != null){
+                System.out.println("Found class " + c.getName());
                 Class parent = c.getParent();
                 while(parent != null){
                     System.out.println("Comparing " + a + " with " + parent.getName());
@@ -819,6 +832,10 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
             return false;
         }
         return true;
+    }
+
+    private boolean isPrintable(String type){ // according to our version of Java
+        return type.equals("int");
     }
 
 }

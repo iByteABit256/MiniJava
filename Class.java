@@ -15,6 +15,24 @@ public class Class {
 
     }
 
+    private boolean parentContainsField(String id){
+        Class currentParent = parent;
+        while(currentParent != null){
+            if(currentParent.getFields().containsKey(id)) return true;
+            currentParent = currentParent.getParent();
+        }
+        return false;
+    }
+
+    private boolean parentContainsMethod(String id){
+        Class currentParent = parent;
+        while(currentParent != null){
+            if(currentParent.getMethods().containsKey(id)) return true;
+            currentParent = currentParent.getParent();
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         String str = "";
@@ -23,10 +41,12 @@ public class Class {
 
         str += "--Variables---\n";
         for(String fieldName : fields.keySet()){
+            if(parentContainsField(fieldName)) continue;
             str += name + "." + fieldName + " : " + fieldOffsets.get(fieldName) + "\n";
         }
         str += "---Methods---\n";
         for(String methodName : methods.keySet()){
+            if(parentContainsMethod(methodName)) continue;
             str += name + "." + methodName + " : " + methodOffsets.get(methodName) + "\n";
         }
 
@@ -65,6 +85,8 @@ public class Class {
 
     public void setParent(Class parent) {
         this.parent = parent;
+        currentFieldOffset = parent.currentFieldOffset;
+        currentMethodOffset = parent.currentMethodOffset;
     }
 
     public String getName() {
@@ -76,11 +98,13 @@ public class Class {
     }
 
     public void updateFieldOffsets(String str, String type){
+        if(parentContainsField(str)) return;
         fieldOffsets.put(str, currentFieldOffset);
         currentFieldOffset += DatatypeMapper.datatypeToBytes(type);
     }
 
     public void updateMethodOffsets(String str){
+        if(parentContainsMethod(str)) return;
         methodOffsets.put(str, currentMethodOffset);
         currentMethodOffset += DatatypeMapper.datatypeToBytes("method");
     }
