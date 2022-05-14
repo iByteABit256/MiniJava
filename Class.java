@@ -57,10 +57,6 @@ public class Class {
         return fields;
     }
 
-    public void setFields(LinkedHashMap<String, String> fields) {
-        this.fields = fields;
-    }
-
     public void insertField(String str, String type){
         fields.put(str, type);
         updateFieldOffsets(str, type);

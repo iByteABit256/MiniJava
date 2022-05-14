@@ -51,28 +51,13 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         Class mainClass = new Class();
         Method mainMethod = new Method();
 
-        n.f0.accept(this, argu);
         mainClass.setName(n.f1.accept(this, argu).toString());
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
         mainMethod.setReturnType("void");
-        n.f6.accept(this, argu);
-        n.f7.accept(this, argu);
-        n.f8.accept(this, argu);
-        n.f9.accept(this, argu);
-        n.f10.accept(this, argu);
         String argsId = n.f11.accept(this, argu).toString();
-        n.f12.accept(this, argu);
-        n.f13.accept(this, argu);
         for(Node node : n.f14.nodes){
             TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
             mainMethod.insertLocalVariable(pair.name, pair.type);
         }
-        n.f15.accept(this, argu);
-        n.f16.accept(this, argu);
-        n.f17.accept(this, argu);
 
         st.addClass(mainClass);
         mainMethod.setName("main");
@@ -91,16 +76,12 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * f5 -> "}"
      */
     public Object visit(ClassDeclaration n, Object argu) throws Exception {
-        Object _ret=null;
-
         Class c = new Class();
 
-        n.f0.accept(this, argu);
         c.setName(n.f1.accept(this, argu).toString());
         if(st.getClassTable().containsKey(c.getName())){
             throw new MiniJavaException("Class with name \"" + c.getName() + "\" already exists.");
         }
-        n.f2.accept(this, argu);
         for(Node node : n.f3.nodes){
             TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
             if(c.getFields().containsKey(pair.name)){
@@ -115,11 +96,10 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
             }
             c.insertMethod(method.getName(), method);
         }
-        n.f5.accept(this, argu);
 
         st.addClass(c);
 
-        return _ret;
+        return null;
     }
 
     /**
@@ -133,16 +113,12 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
      * f7 -> "}"
      */
     public Object visit(ClassExtendsDeclaration n, Object argu) throws Exception {
-        Object _ret=null;
-
         Class c = new Class();
 
-        n.f0.accept(this, argu);
         c.setName(n.f1.accept(this, argu).toString());
         if(st.getClassTable().containsKey(c.getName())){
             throw new MiniJavaException("Class with name \"" + c.getName() + "\" already exists.");
         }
-        n.f2.accept(this, argu);
         String parentName = n.f3.accept(this, argu).toString();
         Class parent = st.getClassTable().get(parentName);
         if(parent != null) {
@@ -150,7 +126,6 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         }else{
             throw new MiniJavaException("Parent class does not exist.");
         }
-        n.f4.accept(this, argu);
         for(Node node : n.f5.nodes){
             TypeIdentifierPair pair = (TypeIdentifierPair) node.accept(this, argu);
             if(c.getFields().containsKey(pair.name)){
@@ -165,12 +140,11 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
             }
             c.insertMethod(method.getName(), method);
         }
-        n.f7.accept(this, argu);
 
         c.canExtendParent();
         st.addClass(c);
 
-        return _ret;
+        return null;
     }
 
     /**
@@ -314,413 +288,10 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
     }
 
     /**
-     * f0 -> Block()
-     *       | AssignmentStatement()
-     *       | ArrayAssignmentStatement()
-     *       | IfStatement()
-     *       | WhileStatement()
-     *       | PrintStatement()
-     */
-    public Object visit(Statement n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
-     * f0 -> "{"
-     * f1 -> ( Statement() )*
-     * f2 -> "}"
-     */
-    public Object visit(Block n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> Identifier()
-     * f1 -> "="
-     * f2 -> Expression()
-     * f3 -> ";"
-     */
-    public Object visit(AssignmentStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> Identifier()
-     * f1 -> "["
-     * f2 -> Expression()
-     * f3 -> "]"
-     * f4 -> "="
-     * f5 -> Expression()
-     * f6 -> ";"
-     */
-    public Object visit(ArrayAssignmentStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        n.f6.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> "if"
-     * f1 -> "("
-     * f2 -> Expression()
-     * f3 -> ")"
-     * f4 -> Statement()
-     * f5 -> "else"
-     * f6 -> Statement()
-     */
-    public Object visit(IfStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        n.f6.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> "while"
-     * f1 -> "("
-     * f2 -> Expression()
-     * f3 -> ")"
-     * f4 -> Statement()
-     */
-    public Object visit(WhileStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> "System.out.println"
-     * f1 -> "("
-     * f2 -> Expression()
-     * f3 -> ")"
-     * f4 -> ";"
-     */
-    public Object visit(PrintStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> AndExpression()
-     *       | CompareExpression()
-     *       | PlusExpression()
-     *       | MinusExpression()
-     *       | TimesExpression()
-     *       | ArrayLookup()
-     *       | ArrayLength()
-     *       | MessageSend()
-     *       | Clause()
-     */
-    public Object visit(Expression n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
-     * f0 -> Clause()
-     * f1 -> "&&"
-     * f2 -> Clause()
-     */
-    public Object visit(AndExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> PrimaryExpression()
-     * f1 -> "<"
-     * f2 -> PrimaryExpression()
-     */
-    public Object visit(CompareExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> PrimaryExpression()
-     * f1 -> "+"
-     * f2 -> PrimaryExpression()
-     */
-    public Object visit(PlusExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> PrimaryExpression()
-     * f1 -> "-"
-     * f2 -> PrimaryExpression()
-     */
-    public Object visit(MinusExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> PrimaryExpression()
-     * f1 -> "*"
-     * f2 -> PrimaryExpression()
-     */
-    public Object visit(TimesExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> PrimaryExpression()
-     * f1 -> "["
-     * f2 -> PrimaryExpression()
-     * f3 -> "]"
-     */
-    public Object visit(ArrayLookup n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> PrimaryExpression()
-     * f1 -> "."
-     * f2 -> "length"
-     */
-    public Object visit(ArrayLength n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> PrimaryExpression()
-     * f1 -> "."
-     * f2 -> Identifier()
-     * f3 -> "("
-     * f4 -> ( ExpressionList() )?
-     * f5 -> ")"
-     */
-    public Object visit(MessageSend n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> Expression()
-     * f1 -> ExpressionTail()
-     */
-    public Object visit(ExpressionList n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> ( ExpressionTerm() )*
-     */
-    public Object visit(ExpressionTail n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
-     * f0 -> ","
-     * f1 -> Expression()
-     */
-    public Object visit(ExpressionTerm n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> NotExpression()
-     *       | PrimaryExpression()
-     */
-    public Object visit(Clause n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
-     * f0 -> IntegerLiteral()
-     *       | TrueLiteral()
-     *       | FalseLiteral()
-     *       | Identifier()
-     *       | ThisExpression()
-     *       | ArrayAllocationExpression()
-     *       | AllocationExpression()
-     *       | BracketExpression()
-     */
-    public Object visit(PrimaryExpression n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
-     * f0 -> <INTEGER_LITERAL>
-     */
-    public Object visit(IntegerLiteral n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
-     * f0 -> "true"
-     */
-    public Object visit(TrueLiteral n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
-     * f0 -> "false"
-     */
-    public Object visit(FalseLiteral n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
      * f0 -> <IDENTIFIER>
      */
     public Object visit(Identifier n, Object argu) throws Exception {
         return n.f0.toString();
-    }
-
-    /**
-     * f0 -> "this"
-     */
-    public Object visit(ThisExpression n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
-     * f0 -> BooleanArrayAllocationExpression()
-     *       | IntegerArrayAllocationExpression()
-     */
-    public Object visit(ArrayAllocationExpression n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
-    }
-
-    /**
-     * f0 -> "new"
-     * f1 -> "boolean"
-     * f2 -> "["
-     * f3 -> Expression()
-     * f4 -> "]"
-     */
-    public Object visit(BooleanArrayAllocationExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> "new"
-     * f1 -> "int"
-     * f2 -> "["
-     * f3 -> Expression()
-     * f4 -> "]"
-     */
-    public Object visit(IntegerArrayAllocationExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> "new"
-     * f1 -> Identifier()
-     * f2 -> "("
-     * f3 -> ")"
-     */
-    public Object visit(AllocationExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> "!"
-     * f1 -> Clause()
-     */
-    public Object visit(NotExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        return _ret;
-    }
-
-    /**
-     * f0 -> "("
-     * f1 -> Expression()
-     * f2 -> ")"
-     */
-    public Object visit(BracketExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
     }
 
 }

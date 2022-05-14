@@ -55,14 +55,6 @@ public class Method {
         localVariableTypes.put(str, type);
     }
 
-    public void insertLocalVariables(ArrayList<TypeIdentifierPair> vars) throws MiniJavaException{
-        if(vars.isEmpty()) return;
-
-        for(TypeIdentifierPair var : vars){
-            insertLocalVariable(var.name, var.type);
-        }
-    }
-
     public boolean canOverload(Method m){
         if(argumentTypes.size() != m.getArgumentTypes().size()){
             return false;
