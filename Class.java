@@ -41,7 +41,6 @@ public class Class {
 
         str += "--Variables---\n";
         for(String fieldName : fields.keySet()){
-            if(parentContainsField(fieldName)) continue;
             str += name + "." + fieldName + " : " + fieldOffsets.get(fieldName) + "\n";
         }
         str += "---Methods---\n";
@@ -49,6 +48,7 @@ public class Class {
             if(parentContainsMethod(methodName)) continue;
             str += name + "." + methodName + " : " + methodOffsets.get(methodName) + "\n";
         }
+        str += "\n";
 
         return str;
     }
@@ -83,7 +83,7 @@ public class Class {
         return parent;
     }
 
-    public void setParent(Class parent) {
+    public void setParent(Class parent) throws MiniJavaException{
         this.parent = parent;
         currentFieldOffset = parent.currentFieldOffset;
         currentMethodOffset = parent.currentMethodOffset;
@@ -98,7 +98,6 @@ public class Class {
     }
 
     public void updateFieldOffsets(String str, String type){
-        if(parentContainsField(str)) return;
         fieldOffsets.put(str, currentFieldOffset);
         currentFieldOffset += DatatypeMapper.datatypeToBytes(type);
     }

@@ -58,11 +58,11 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         String mainClassName = getNameFromPair(n.f1.accept(this, argu));
         Class mainClass = st.getClassTable().get(mainClassName);
         cm.enterContext(mainClass);
-        System.err.println("Entering main context");
+//        System.err.println("Entering main context");
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
         cm.enterContext(mainClass.getMethods().get("main"));
-        System.err.println("Entering main method context");
+//        System.err.println("Entering main method context");
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
         n.f6.accept(this, argu);
@@ -77,9 +77,9 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         n.f15.accept(this, argu);
         n.f16.accept(this, argu);
         cm.leaveContext();
-        System.err.println("Leaving main method context");
+//        System.err.println("Leaving main method context");
         cm.leaveContext();
-        System.err.println("Leaving main context");
+//        System.err.println("Leaving main context");
         n.f17.accept(this, argu);
         return null;
     }
@@ -310,7 +310,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         String type = getTypeFromPair(n.f0.accept(this, argu));
         n.f1.accept(this, argu);
         String valueType = (String) n.f2.accept(this, argu);
-        System.out.println("Comparing " + type + " with " + valueType);
+//        System.out.println("Comparing " + type + " with " + valueType);
         if(!typesMatch(type, valueType)){
             throw new MiniJavaException("Cannot assign value of type " + valueType + " to variable of type " + type);
         }
@@ -549,8 +549,8 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         n.f3.accept(this, argu);
         ArrayList<String> types = n.f4.present()?
                 (ArrayList<String>) n.f4.accept(this, argu) : new ArrayList<>();
-        System.out.println(types.size());
-        System.out.println(actualTypes.size());
+//        System.out.println(types.size());
+//        System.out.println(actualTypes.size());
         if(types.size() != actualTypes.size()){
             throw new MiniJavaException("Method with " + actualTypes.size() + " arguments called with " + types.size() + " parameters");
         }
@@ -645,7 +645,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
      */
     public TypeIdentifierPair visit(Identifier n, Object argu) throws Exception {
         String id = n.f0.toString();
-        System.err.println("Currently at IDENTIFIER with id: " + id);
+//        System.err.println("Currently at IDENTIFIER with id: " + id);
         Class classContext = cm.getClassCtx();
         Method methodContext = cm.getMethodCtx();
 
@@ -655,14 +655,14 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
             HashMap<String, String> args = methodContext.getArgumentTypes();
             if (localVars.containsKey(id)) return new TypeIdentifierPair(localVars.get(id), id);
             if (args.containsKey(id)) return new TypeIdentifierPair(args.get(id), id);
-            System.err.println("In method context: " + methodContext.getName());
-            System.err.println(methodContext.getArgumentTypes());
+//            System.err.println("In method context: " + methodContext.getName());
+//            System.err.println(methodContext.getArgumentTypes());
         }
         if(classContext != null){
             // Check if identifier is a class field
             HashMap<String, String> classFields = classContext.getFields();
             if(classFields.containsKey(id)) return new TypeIdentifierPair(classFields.get(id), id);
-            System.err.println("In class context: " + classContext.getName());
+//            System.err.println("In class context: " + classContext.getName());
 
             // Check if identifier is a parent class field
             Class parent = classContext.getParent();
@@ -786,7 +786,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
             TypeIdentifierPair pair = (TypeIdentifierPair) o;
             return pair.name;
         }catch(Exception e){
-            System.err.println(e);
+//            System.err.println(e);
             return "";
         }
     }
@@ -796,7 +796,7 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
             TypeIdentifierPair pair = (TypeIdentifierPair) o;
             return pair.type;
         }catch(Exception e){
-            System.err.println(e);
+//            System.err.println(e);
             return "";
         }
     }
@@ -819,10 +819,10 @@ public class TypeCheckVisitor extends GJDepthFirst<Object, Object> {
         if(!a.equals(b)){
             Class c = st.getClassTable().get(b);
             if(c != null){
-                System.out.println("Found class " + c.getName());
+//                System.out.println("Found class " + c.getName());
                 Class parent = c.getParent();
                 while(parent != null){
-                    System.out.println("Comparing " + a + " with " + parent.getName());
+//                    System.out.println("Comparing " + a + " with " + parent.getName());
                     if(a.equals(parent.getName())){
                         return true;
                     }

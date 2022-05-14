@@ -17,11 +17,11 @@ public class Main {
             fis = new FileInputStream(args[0]);
             MiniJavaParser parser = new MiniJavaParser(fis);
             Goal root = parser.Goal();
-            System.err.println("Program parsed successfully.");
+//            System.err.println("Program parsed successfully.");
             SymbolTableVisitor stv = new SymbolTableVisitor();
             root.accept(stv, null);
             SymbolTable st = stv.getSymbolTable();
-            System.out.println("# of Classes: " + st.getClassTable().size());
+//            System.out.println("# of Classes: " + st.getClassTable().size());
 
             fis2 = new FileInputStream(args[0]);
             MiniJavaParser parser2 = new MiniJavaParser(fis2);
