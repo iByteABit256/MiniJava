@@ -10,6 +10,8 @@ public class Method {
 
     private LinkedHashMap<String, String> localVariableTypes = new LinkedHashMap<>();
 
+    private String VTableEntry;
+
     public String getReturnType() {
         return returnType;
     }
@@ -67,5 +69,17 @@ public class Method {
             }
         }
         return returnType == m.getReturnType();
+    }
+
+    public void setVTableEntry(){
+        VTableEntry = "define " + DatatypeMapper.datatypeToLLVM(returnType) + " @" + name + "(" + DatatypeMapper.datatypeToLLVM(name) + " %this";
+        for(String argType : argumentTypes.values()){
+            VTableEntry += ", " + DatatypeMapper.datatypeToLLVM(argType);
+        }
+        VTableEntry += ")";
+    }
+
+    public String getVTableEntry() {
+        return VTableEntry;
     }
 }

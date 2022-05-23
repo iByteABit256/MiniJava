@@ -10,4 +10,19 @@ public class DatatypeMapper {
                 return 8;
         }
     }
+
+    public static String datatypeToLLVM(String type){
+        switch (type) {
+            case "int":
+                return "_i32";
+            case "boolean":
+                return "_i1";
+            case "int[]":
+                return "_i32*";
+            case "boolean[]":
+                return "_i1*";
+            default:
+                return "_i8*";
+        }
+    }
 }
