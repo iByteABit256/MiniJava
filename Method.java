@@ -1,16 +1,15 @@
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
 
 public class Method {
+
     private String name;
-
     private String returnType;
-
     private LinkedHashMap<String, String> argumentTypes = new LinkedHashMap<>();
-
     private LinkedHashMap<String, String> localVariableTypes = new LinkedHashMap<>();
-
-    private String VTableEntry;
+    private String VTableEntry; // Maybe unnecessary to store in variable
+    private String LLVM_method_head;
 
     public String getReturnType() {
         return returnType;
@@ -71,15 +70,31 @@ public class Method {
         return returnType == m.getReturnType();
     }
 
-    public void setVTableEntry(){
-        VTableEntry = "define " + DatatypeMapper.datatypeToLLVM(returnType) + " @" + name + "(" + DatatypeMapper.datatypeToLLVM(name) + " %this";
-        for(String argType : argumentTypes.values()){
-            VTableEntry += ", " + DatatypeMapper.datatypeToLLVM(argType);
+    public void setLLVM_method_head(){
+        LLVM_method_head = "define " + DatatypeMapper.datatypeToLLVM(returnType) + " @" + name + "(" + DatatypeMapper.datatypeToLLVM(name) + " %this";
+        argumentTypes.forEach((argName, argType) -> LLVM_method_head += ", " + DatatypeMapper.datatypeToLLVM(argType) + " @" + argName);
+        LLVM_method_head += ")";
+    }
+
+    public String getLLVM_method_head() {
+        return LLVM_method_head;
+    }
+
+    public void setVTableEntry(String className) {
+        String llvm_return_type = DatatypeMapper.datatypeToLLVM(returnType);
+        ArrayList<String> llvm_arg_types = new ArrayList<>(argumentTypes.values().stream().map(DatatypeMapper::datatypeToLLVM).collect(Collectors.toList()));
+
+        VTableEntry = "i8* bitcast (" + llvm_return_type + " (i8*";
+        for(int i = 0; i < llvm_arg_types.size(); i++){
+            VTableEntry += ",";
+            VTableEntry += llvm_arg_types.get(i);
         }
-        VTableEntry += ")";
+
+        VTableEntry += ")* @" + className + "." + name + " to i8*)";
     }
 
     public String getVTableEntry() {
         return VTableEntry;
     }
+
 }

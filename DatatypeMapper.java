@@ -14,15 +14,15 @@ public class DatatypeMapper {
     public static String datatypeToLLVM(String type){
         switch (type) {
             case "int":
-                return "_i32";
+                return "i32";
             case "boolean":
-                return "_i1";
+                return "i1";
             case "int[]":
-                return "_i32*";
+                return "i32*";
             case "boolean[]":
-                return "_i1*";
+                return "i1*";
             default:
-                return "_i8*";
+                return "i8*";
         }
     }
 }

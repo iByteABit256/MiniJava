@@ -30,6 +30,7 @@ public class Main {
                 root2.accept(tcv, null);
 
                 stv.showSymbolTable();
+                st.showVTable();
             } catch (ParseException ex) {
                 System.out.println(ex.getMessage());
             } catch (FileNotFoundException ex) {

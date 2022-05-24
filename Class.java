@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 public class Class {
@@ -10,6 +11,7 @@ public class Class {
     private LinkedHashMap<String, Integer> fieldOffsets = new LinkedHashMap<>();
     private LinkedHashMap<String, Integer> methodOffsets = new LinkedHashMap<>();
     private Class parent;
+    private String VTableEntry;
 
     public Class(){
 
@@ -100,5 +102,22 @@ public class Class {
                 throw new MiniJavaException("Method " + childMethod.getName() + " cannot overload parent method.");
             }
         }
+    }
+
+    public String getVTableEntry() {
+        return VTableEntry;
+    }
+
+    public void setVTableEntry() {
+        VTableEntry = "@." + name + "_vtable = global [" + methods.size() + " x i8*] [";
+        ArrayList<Method> methods = new ArrayList<>(getMethods().values());
+        for(int i = 0; i < methods.size(); i ++){
+            methods.get(i).setVTableEntry(name);
+            VTableEntry += methods.get(i).getVTableEntry();
+            if(i != methods.size()-1){
+                VTableEntry += ", ";
+            }
+        }
+        VTableEntry += "]";
     }
 }
