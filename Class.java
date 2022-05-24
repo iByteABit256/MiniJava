@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
 
 public class Class {
 
@@ -109,8 +110,9 @@ public class Class {
     }
 
     public void setVTableEntry() {
+        ArrayList<Method> methods = new ArrayList<>(
+                getMethods().values().stream().filter(m -> !m.getName().equals("main")).collect(Collectors.toList()));
         VTableEntry = "@." + name + "_vtable = global [" + methods.size() + " x i8*] [";
-        ArrayList<Method> methods = new ArrayList<>(getMethods().values());
         for(int i = 0; i < methods.size(); i ++){
             methods.get(i).setVTableEntry(name);
             VTableEntry += methods.get(i).getVTableEntry();
