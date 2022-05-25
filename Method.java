@@ -4,6 +4,7 @@ import java.util.stream.Collectors;
 
 public class Method {
 
+    private String className;
     private String name;
     private String returnType;
     private LinkedHashMap<String, String> argumentTypes = new LinkedHashMap<>();
@@ -80,7 +81,7 @@ public class Method {
         return LLVM_method_head;
     }
 
-    public void setVTableEntry(String className) {
+    public void setVTableEntry() {
         String llvm_return_type = DatatypeMapper.datatypeToLLVM(returnType);
         ArrayList<String> llvm_arg_types = new ArrayList<>(argumentTypes.values().stream().map(DatatypeMapper::datatypeToLLVM).collect(Collectors.toList()));
 
@@ -97,4 +98,11 @@ public class Method {
         return VTableEntry;
     }
 
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
 }

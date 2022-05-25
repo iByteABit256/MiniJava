@@ -51,7 +51,9 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         Class mainClass = new Class();
         Method mainMethod = new Method();
 
-        mainClass.setName(n.f1.accept(this, argu).toString());
+        String className = n.f1.accept(this, argu).toString();
+        mainClass.setName(className);
+        mainMethod.setClassName(className);
         mainMethod.setReturnType("void");
         String argsId = n.f11.accept(this, argu).toString();
         for(Node node : n.f14.nodes){
@@ -78,7 +80,8 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
     public Object visit(ClassDeclaration n, Object argu) throws Exception {
         Class c = new Class();
 
-        c.setName(n.f1.accept(this, argu).toString());
+        String className = n.f1.accept(this, argu).toString();
+        c.setName(className);
         if(st.getClassTable().containsKey(c.getName())){
             throw new MiniJavaException("Class with name \"" + c.getName() + "\" already exists.");
         }
@@ -94,6 +97,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
             if(c.getMethods().containsKey(method.getName())){
                 throw new MiniJavaException("Method with name \"" + method.getName() + "\" already exists");
             }
+            method.setClassName(className);
             c.insertMethod(method.getName(), method);
         }
 
@@ -115,7 +119,8 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
     public Object visit(ClassExtendsDeclaration n, Object argu) throws Exception {
         Class c = new Class();
 
-        c.setName(n.f1.accept(this, argu).toString());
+        String className = n.f1.accept(this, argu).toString();
+        c.setName(className);
         if(st.getClassTable().containsKey(c.getName())){
             throw new MiniJavaException("Class with name \"" + c.getName() + "\" already exists.");
         }
@@ -138,6 +143,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
             if(c.getMethods().containsKey(method.getName())){
                 throw new MiniJavaException("Method with name \"" + method.getName() + "\" already exists");
             }
+            method.setClassName(className);
             c.insertMethod(method.getName(), method);
         }
 

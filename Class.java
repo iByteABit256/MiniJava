@@ -111,15 +111,28 @@ public class Class {
 
     public void setVTableEntry() {
         ArrayList<Method> methods = new ArrayList<>(
-                getMethods().values().stream().filter(m -> !m.getName().equals("main")).collect(Collectors.toList()));
+                getAllMethods().values().stream().filter(m -> !m.getName().equals("main")).collect(Collectors.toList()));
         VTableEntry = "@." + name + "_vtable = global [" + methods.size() + " x i8*] [";
         for(int i = 0; i < methods.size(); i ++){
-            methods.get(i).setVTableEntry(name);
+            methods.get(i).setVTableEntry();
             VTableEntry += methods.get(i).getVTableEntry();
             if(i != methods.size()-1){
                 VTableEntry += ", ";
             }
         }
         VTableEntry += "]";
+    }
+
+    private LinkedHashMap<String, Method> getAllMethods(){
+        LinkedHashMap<String, Method> methods = new LinkedHashMap<>();
+
+        Class c = this;
+        while(c != null){
+            c.getMethods().values().stream().filter(m -> !m.getName().equals("main") && !methods.containsKey(m.getName()))
+                    .forEach(method -> methods.put(method.getName(), method));
+            c = c.getParent();
+        }
+
+        return methods;
     }
 }
