@@ -12,6 +12,7 @@ public class Class {
     private LinkedHashMap<String, Integer> fieldOffsets = new LinkedHashMap<>();
     private LinkedHashMap<String, Integer> methodOffsets = new LinkedHashMap<>();
     private Class parent;
+    private Class child;
     private String VTableEntry;
 
     public Class(){
@@ -126,13 +127,26 @@ public class Class {
     private LinkedHashMap<String, Method> getAllMethods(){
         LinkedHashMap<String, Method> methods = new LinkedHashMap<>();
 
-        Class c = this;
-        while(c != null){
-            c.getMethods().values().stream().filter(m -> !m.getName().equals("main") && !methods.containsKey(m.getName()))
-                    .forEach(method -> methods.put(method.getName(), method));
-            c = c.getParent();
+        Class root = this;
+        while(root.getParent() != null){
+            root = root.getParent();
         }
 
+        Class c = root;
+        while(c.getName() != this.name){
+            methods.putAll(c.getMethods());
+            c = c.getChild();
+        }
+        methods.putAll(c.getMethods());
+
         return methods;
+    }
+
+    public Class getChild() {
+        return child;
+    }
+
+    public void setChild(Class child) {
+        this.child = child;
     }
 }

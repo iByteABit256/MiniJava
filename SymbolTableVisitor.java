@@ -128,6 +128,7 @@ public class SymbolTableVisitor extends GJDepthFirst<Object, Object> {
         Class parent = st.getClassTable().get(parentName);
         if(parent != null) {
             c.setParent(st.getClassTable().get(parentName));
+            st.getClassTable().get(parentName).setChild(c);
         }else{
             throw new MiniJavaException("Parent class does not exist.");
         }
