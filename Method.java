@@ -11,6 +11,7 @@ public class Method {
     private LinkedHashMap<String, String> localVariableTypes = new LinkedHashMap<>();
     private String VTableEntry; // Maybe unnecessary to store in variable
     private String LLVM_method_head;
+    private String LLVM_method_body;
 
     public String getReturnType() {
         return returnType;
@@ -104,5 +105,17 @@ public class Method {
 
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    public String getLLVM_method_body() {
+        return LLVM_method_body;
+    }
+
+    public void setLLVM_method_body(String LLVM_method_body) {
+        this.LLVM_method_body = LLVM_method_body;
+    }
+
+    public void appendToLLVM_method_body(String LLVM_method_body_segment) {
+        LLVM_method_body += LLVM_method_body_segment;
     }
 }

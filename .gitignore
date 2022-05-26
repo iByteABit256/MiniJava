@@ -20,3 +20,4 @@
 !README.txt
 !LLVM_Converter.java
 !InputParser.java
+!LLVMVisitor.java
