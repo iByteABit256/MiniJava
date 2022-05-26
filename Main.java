@@ -6,31 +6,35 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        if(args.length == 0){
-            System.err.println("Usage: java Main <inputFiles>");
-            System.exit(1);
-        }
+        InputParser inputParser = new InputParser(args);
 
-        for(int i = 0; i < args.length; i++) {
+        for(String inputFile : inputParser.getFiles()) {
 
             FileInputStream fis = null;
             FileInputStream fis2 = null;
             try {
-                fis = new FileInputStream(args[i]);
+                fis = new FileInputStream(inputFile);
                 MiniJavaParser parser = new MiniJavaParser(fis);
                 Goal root = parser.Goal();
                 SymbolTableVisitor stv = new SymbolTableVisitor();
                 root.accept(stv, null);
                 SymbolTable st = stv.getSymbolTable();
 
-                fis2 = new FileInputStream(args[i]);
+                fis2 = new FileInputStream(inputFile);
                 MiniJavaParser parser2 = new MiniJavaParser(fis2);
                 Goal root2 = parser2.Goal();
                 TypeCheckVisitor tcv = new TypeCheckVisitor(st);
                 root2.accept(tcv, null);
 
-                stv.showSymbolTable();
-                st.showVTable();
+                if(inputParser.getShowSymbolTable()){
+                    stv.showSymbolTable();
+                }
+
+                if(inputParser.getShowLLVM()){
+                    LLVM_Converter llvm_converter = new LLVM_Converter(st);
+                    llvm_converter.generateLLVM();
+                }
+
             } catch (ParseException ex) {
                 System.out.println(ex.getMessage());
             } catch (FileNotFoundException ex) {

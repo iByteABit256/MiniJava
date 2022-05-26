@@ -72,8 +72,8 @@ public class Method {
     }
 
     public void setLLVM_method_head(){
-        LLVM_method_head = "define " + DatatypeMapper.datatypeToLLVM(returnType) + " @" + name + "(" + DatatypeMapper.datatypeToLLVM(name) + " %this";
-        argumentTypes.forEach((argName, argType) -> LLVM_method_head += ", " + DatatypeMapper.datatypeToLLVM(argType) + " @" + argName);
+        LLVM_method_head = "define " + DatatypeMapper.datatypeToLLVM(returnType) + " @" + className + "." + name + "(" + DatatypeMapper.datatypeToLLVM(name) + " %this";
+        argumentTypes.forEach((argName, argType) -> LLVM_method_head += ", " + DatatypeMapper.datatypeToLLVM(argType) + " %" + argName);
         LLVM_method_head += ")";
     }
 

@@ -21,6 +21,9 @@ public class DatatypeMapper {
                 return "i32*";
             case "boolean[]":
                 return "i1*";
+            case "void":
+            case "static void":
+                return "void";
             default:
                 return "i8*";
         }
