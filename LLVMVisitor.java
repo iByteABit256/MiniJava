@@ -1,9 +1,16 @@
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 
+import java.util.HashMap;
+
 public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     private SymbolTable st;
     private ContextManager cm = new ContextManager();
+    private RegisterManager rm = new RegisterManager();
+
+    public LLVMVisitor(SymbolTable st){
+        this.st = st;
+    }
 
     /**
      * f0 -> "class"
@@ -32,7 +39,10 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         cm.enterContext(mainClass);
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
-        cm.enterContext(mainClass.getMethods().get("main"));
+        Method main = mainClass.getMethods().get("main");
+        cm.enterContext(main);
+
+        System.out.println("define i32 @main()\n{");
 
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
@@ -47,6 +57,9 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         n.f14.accept(this, argu);
         n.f15.accept(this, argu);
         n.f16.accept(this, argu);
+
+        System.out.printf("\tret i32 0\n}\n");
+
         cm.leaveContext();
         cm.leaveContext();
         n.f17.accept(this, argu);
@@ -116,7 +129,18 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     public Object visit(MethodDeclaration n, Object argu) throws Exception {
         Object _ret=null;
+
         n.f0.accept(this, argu);
+        n.f1.accept(this, argu);
+        String methodName = getNameFromPair(n.f2.accept(this, argu));
+        Class c = cm.getClassCtx();
+        Method m = c.getMethods().get(methodName);
+        cm.enterContext(m);
+
+        m.setLLVM_method_head();
+        System.out.println(m.getLLVM_method_head());
+        System.out.printf("{\n");
+
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
@@ -129,6 +153,9 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         n.f10.accept(this, argu);
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
+
+        System.out.printf("}\n");
+        cm.leaveContext();
         return _ret;
     }
 
@@ -151,6 +178,19 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         Object _ret=null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
+        return _ret;
+    }
+
+    /**
+     * f0 -> Type()
+     * f1 -> Identifier()
+     * f2 -> ";"
+     */
+    public Object visit(VarDeclaration n, Object argu) throws Exception {
+        Object _ret=null;
+        n.f0.accept(this, argu);
+        n.f1.accept(this, argu);
+        n.f2.accept(this, argu);
         return _ret;
     }
 
@@ -263,6 +303,8 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     public Object visit(AssignmentStatement n, Object argu) throws Exception {
         Object _ret=null;
+        // Maybe get register name and type from identifier
+        // and produce identifier's output before
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
@@ -528,28 +570,60 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> <INTEGER_LITERAL>
      */
     public Object visit(IntegerLiteral n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return rm.newRegister("i32");
     }
 
     /**
      * f0 -> "true"
      */
     public Object visit(TrueLiteral n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return new TypeRegisterPair("i1", "1");
     }
 
     /**
      * f0 -> "false"
      */
     public Object visit(FalseLiteral n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return new TypeRegisterPair("i1", "0");
     }
 
     /**
      * f0 -> <IDENTIFIER>
      */
-    public Object visit(Identifier n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+    public TypeRegisterPair visit(Identifier n, Object argu) throws Exception {
+        String id = n.f0.toString();
+        Class classContext = cm.getClassCtx();
+        Method methodContext = cm.getMethodCtx();
+
+        if(methodContext != null) {
+            // Check if identifier is a method local variable or argument
+            HashMap<String, String> localVars = methodContext.getLocalVariableTypes();
+            HashMap<String, String> args = methodContext.getArgumentTypes();
+            if (localVars.containsKey(id)) return rm.newRegister(localVars.get(id));
+//            if (args.containsKey(id)) return rm.newRegister(args.get(id));
+            return null;
+        }
+        if(classContext != null){
+//            // Check if identifier is a class field
+//            HashMap<String, String> classFields = classContext.getFields();
+//            if(classFields.containsKey(id)) return rm.newRegister(classFields.get(id));
+//
+//            // Check if identifier is a parent class field
+//            Class parent = classContext.getParent();
+//            while(parent != null){
+//                HashMap<String, String> parentClassFields = parent.getFields();
+//                if(parentClassFields.containsKey(id)) return rm.newRegister(parentClassFields.get(id));
+//                parent = parent.getParent();
+//            }
+            return null;
+        }
+        // Check if identifier is a class or method
+        if(st.getClassTable().containsKey(id)) return new TypeRegisterPair("class", id);
+        for(Class c : st.getClassTable().values()){
+            if(c.getMethods().containsKey(id)) return new TypeRegisterPair("method", id);
+        }
+        // Identifier was not declared
+        throw new MiniJavaException("No declared identifier " + id);
     }
 
     /**
@@ -640,10 +714,11 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         return _ret;
     }
 
-    private String getNameFromPair(Object o) throws Exception{
+    private String getNameFromPair(Object o) {
+        // Used for class and method identifiers only
         try {
-            TypeIdentifierPair pair = (TypeIdentifierPair) o;
-            return pair.name;
+            TypeRegisterPair pair = (TypeRegisterPair) o;
+            return pair.getRegister();
         }catch(Exception e){
             return "";
         }

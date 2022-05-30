@@ -16,23 +16,23 @@ public class Main {
                 fis = new FileInputStream(inputFile);
                 MiniJavaParser parser = new MiniJavaParser(fis);
                 Goal root = parser.Goal();
+
                 SymbolTableVisitor stv = new SymbolTableVisitor();
                 root.accept(stv, null);
                 SymbolTable st = stv.getSymbolTable();
 
-                fis2 = new FileInputStream(inputFile);
-                MiniJavaParser parser2 = new MiniJavaParser(fis2);
-                Goal root2 = parser2.Goal();
                 TypeCheckVisitor tcv = new TypeCheckVisitor(st);
-                root2.accept(tcv, null);
+                root.accept(tcv, null);
 
                 if(inputParser.getShowSymbolTable()){
                     stv.showSymbolTable();
                 }
 
                 if(inputParser.getShowLLVM()){
-                    LLVM_Converter llvm_converter = new LLVM_Converter(st);
-                    llvm_converter.generateLLVM();
+                    st.showVTable();
+
+                    LLVMVisitor llvmVisitor = new LLVMVisitor(st);
+                    root.accept(llvmVisitor, null);
                 }
 
             } catch (ParseException ex) {

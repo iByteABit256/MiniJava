@@ -18,6 +18,7 @@
 !TypeCheckVisitor.java
 !ContextManager.java
 !README.txt
-!LLVM_Converter.java
 !InputParser.java
 !LLVMVisitor.java
+!TypeRegisterPair.java
+!RegisterManager.java

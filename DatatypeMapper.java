@@ -28,4 +28,15 @@ public class DatatypeMapper {
                 return "i8*";
         }
     }
+
+    public static String datatypeToDefaultVal(String type){
+        switch (type) {
+            case "i32":
+                return "0";
+            case "i1":
+                return "false";
+            default:
+                return "null";
+        }
+    }
 }

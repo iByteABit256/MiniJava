@@ -29,6 +29,7 @@ public class SymbolTable {
             c.setVTableEntry();
             System.out.println(c.getVTableEntry());
         });
+        System.out.println("");
     }
 
 }
