@@ -1,4 +1,3 @@
-import javax.xml.crypto.Data;
 import java.util.HashMap;
 
 public class RegisterManager {
@@ -9,21 +8,30 @@ public class RegisterManager {
         this.registerCounter = 0;
     }
 
-    public TypeRegisterPair newRegister(String id, String type){
+    public TypeRegisterPair allocateRegister(String id, String type){
         type = DatatypeMapper.datatypeToLLVM(type);
         registers.put(id, type);
-        return newRegister(type);
+        return allocateRegister(type);
     }
 
-    public TypeRegisterPair newRegister(String type){
+    public TypeRegisterPair allocateRegister(String type){
         type = DatatypeMapper.datatypeToLLVM(type);
-        allocateNewRegister(type);
+        System.out.println("\t" + currentReg() + " = alloca " + type);
+        System.out.println("\tstore " + type + " " + DatatypeMapper.datatypeToDefaultVal(type) + ", " + type + "* " + currentReg());
         return new TypeRegisterPair(type, "%_" + registerCounter++);
     }
 
-    private void allocateNewRegister(String type){
-        System.out.println("\t" + currentReg() + " = alloca " + type);
-        System.out.println("\tstore " + type + " " + DatatypeMapper.datatypeToDefaultVal(type) + ", " + type + "* " + currentReg());
+    public TypeRegisterPair loadRegister(String id, TypeRegisterPair typeRegisterPair){
+        String type = DatatypeMapper.datatypeToLLVM(typeRegisterPair.getType());
+        registers.put(id, type);
+        return loadRegister(typeRegisterPair);
+    }
+
+    public TypeRegisterPair loadRegister(TypeRegisterPair typeRegisterPair){
+        String type = DatatypeMapper.datatypeToLLVM(typeRegisterPair.getType());
+        String reg = typeRegisterPair.getRegister();
+        System.out.println("\t" + currentReg() + " = load " + type + ", " + type + "* " + reg);
+        return new TypeRegisterPair(type, "%_" + registerCounter++);
     }
 
     private String currentReg(){
