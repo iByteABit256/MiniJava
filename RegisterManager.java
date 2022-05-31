@@ -1,7 +1,7 @@
 import java.util.HashMap;
 
 public class RegisterManager {
-    private HashMap<String, String> registers;
+    private HashMap<String, TypeRegisterPair> registers = new HashMap<>();
     private int registerCounter;
 
     public RegisterManager(){
@@ -10,8 +10,9 @@ public class RegisterManager {
 
     public TypeRegisterPair allocateRegister(String id, String type){
         type = DatatypeMapper.datatypeToLLVM(type);
-        registers.put(id, type);
-        return allocateRegister(type);
+        TypeRegisterPair reg = allocateRegister(type);
+        registers.put(id, reg);
+        return reg;
     }
 
     public TypeRegisterPair allocateRegister(String type){
@@ -21,10 +22,18 @@ public class RegisterManager {
         return new TypeRegisterPair(type, "%_" + registerCounter++);
     }
 
+    public TypeRegisterPair allocateRegisterWithValue(String type, String value){
+        type = DatatypeMapper.datatypeToLLVM(type);
+        System.out.println("\t" + currentReg() + " = alloca " + type);
+        System.out.println("\tstore " + type + " " + value + ", " + type + "* " + currentReg());
+        return new TypeRegisterPair(type, "%_" + registerCounter++);
+    }
+
     public TypeRegisterPair loadRegister(String id, TypeRegisterPair typeRegisterPair){
         String type = DatatypeMapper.datatypeToLLVM(typeRegisterPair.getType());
-        registers.put(id, type);
-        return loadRegister(typeRegisterPair);
+        TypeRegisterPair reg = loadRegister(typeRegisterPair);
+        registers.put(id, reg);
+        return reg;
     }
 
     public TypeRegisterPair loadRegister(TypeRegisterPair typeRegisterPair){
@@ -34,12 +43,22 @@ public class RegisterManager {
         return new TypeRegisterPair(type, "%_" + registerCounter++);
     }
 
+    public void storeInRegister(TypeRegisterPair left, TypeRegisterPair right){
+        TypeRegisterPair loadedRegister = loadRegister(right);
+        System.out.println("\tstore " + left.getType() + " " + loadedRegister.getRegister() + ", " + loadedRegister.getType() + "* " + left.getRegister());
+    }
+
+    public TypeRegisterPair getRegisterFromID(String id){
+        return registers.get(id);
+    }
+
     private String currentReg(){
         return "%_" + registerCounter;
     }
 
     public void reset(){
         this.registerCounter = 0;
+        this.registers.clear();
     }
 
 }

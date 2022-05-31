@@ -153,10 +153,11 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         n.f8.accept(this, argu);
         n.f9.accept(this, argu);
         TypeRegisterPair typeRegisterPair = (TypeRegisterPair) n.f10.accept(this, argu);
+        TypeRegisterPair loaded = rm.loadRegister(typeRegisterPair);
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
 
-        System.out.println("\tret " + typeRegisterPair.getType() + " " + typeRegisterPair.getRegister());
+        System.out.println("\tret " + loaded.getType() + " " + loaded.getRegister());
         System.out.println("}");
         cm.leaveContext();
         rm.reset();
@@ -307,14 +308,12 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> ";"
      */
     public Object visit(AssignmentStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        // Maybe get register name and type from identifier
-        // and produce identifier's output before
-        n.f0.accept(this, argu);
+        TypeRegisterPair left = (TypeRegisterPair) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        TypeRegisterPair right = (TypeRegisterPair) n.f2.accept(this, argu);
+        rm.storeInRegister(left, right);
         n.f3.accept(this, argu);
-        return _ret;
+        return null;
     }
 
     /**
@@ -406,7 +405,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     public Object visit(Expression n, Object argu) throws Exception {
         TypeRegisterPair typeRegisterPair = (TypeRegisterPair) n.f0.accept(this, argu);
-        return rm.loadRegister(typeRegisterPair);
+        return typeRegisterPair;
     }
 
     /**
@@ -576,21 +575,22 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> <INTEGER_LITERAL>
      */
     public Object visit(IntegerLiteral n, Object argu) throws Exception {
-        return rm.allocateRegister("i32");
+        String val = n.f0.toString();
+        return rm.allocateRegisterWithValue("i32", val);
     }
 
     /**
      * f0 -> "true"
      */
     public Object visit(TrueLiteral n, Object argu) throws Exception {
-        return new TypeRegisterPair("i1", "1");
+        return rm.allocateRegisterWithValue("i1", "true");
     }
 
     /**
      * f0 -> "false"
      */
     public Object visit(FalseLiteral n, Object argu) throws Exception {
-        return new TypeRegisterPair("i1", "0");
+        return rm.allocateRegisterWithValue("i1", "false");
     }
 
     /**
@@ -601,11 +601,16 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         Class classContext = cm.getClassCtx();
         Method methodContext = cm.getMethodCtx();
 
+        TypeRegisterPair reg = rm.getRegisterFromID(id);
+        if(reg != null){
+            return reg;
+        }
+
         if(methodContext != null) {
             // Check if identifier is a method local variable or argument
             HashMap<String, String> localVars = methodContext.getLocalVariableTypes();
             HashMap<String, String> args = methodContext.getArgumentTypes();
-            if (localVars.containsKey(id)) return rm.allocateRegister(localVars.get(id));
+            if (localVars.containsKey(id)) return rm.allocateRegister(id, localVars.get(id));
 //            if (args.containsKey(id)) return rm.newRegister(args.get(id));
             return null;
         }
