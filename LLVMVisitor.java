@@ -10,6 +10,27 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
 
     public LLVMVisitor(SymbolTable st){
         this.st = st;
+
+        System.out.print(
+            "declare i8* @calloc(i32, i32)\n"+
+            "declare i32 @printf(i8*, ...)\n"+
+            "declare void @exit(i32)\n\n"+
+
+            "@_cint = constant [4 x i8] c\"%d\\0a\\00\"\n"+
+            "@_cOOB = constant [15 x i8] c\"Out of bounds\\0a\\00\"\n"+
+            "define void @print_int(i32 %i) {\n"+
+                "\t%_str = bitcast [4 x i8]* @_cint to i8*\n"+
+                "\tcall i32 (i8*, ...) @printf(i8* %_str, i32 %i)\n"+
+                "\tret void\n"+
+            "}\n\n"+
+
+            "define void @throw_oob() {\n"+
+                "\t%_str = bitcast [15 x i8]* @_cOOB to i8*\n"+
+                "\tcall i32 (i8*, ...) @printf(i8* %_str)\n"+
+                "\tcall void @exit(i32 1)\n"+
+                "\tret void\n"+
+            "}\n\n"
+        );
     }
 
     /**
@@ -58,7 +79,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         n.f15.accept(this, argu);
         n.f16.accept(this, argu);
 
-        System.out.println("\tret i32 0\n}");
+        System.out.println("\tret i32 0\n}\n");
 
         cm.leaveContext();
         rm.reset();
@@ -158,7 +179,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         n.f12.accept(this, argu);
 
         System.out.println("\tret " + loaded.getType() + " " + loaded.getRegister());
-        System.out.println("}");
+        System.out.println("}\n");
         cm.leaveContext();
         rm.reset();
 
@@ -386,7 +407,8 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         Object _ret=null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        TypeRegisterPair typeRegisterPair = (TypeRegisterPair) n.f2.accept(this, argu);
+        rm.print(typeRegisterPair);
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         return _ret;

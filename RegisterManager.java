@@ -1,5 +1,3 @@
-import syntaxtree.Type;
-
 import java.util.HashMap;
 
 public class RegisterManager {
@@ -78,6 +76,20 @@ public class RegisterManager {
 
     public TypeRegisterPair getRegisterFromID(String id){
         return registers.get(id);
+    }
+
+    public void print(TypeRegisterPair typeRegisterPair){
+        typeRegisterPair = loadRegister(typeRegisterPair);
+        switch (typeRegisterPair.getType()){
+            case "i32":
+                printInt(typeRegisterPair);
+                break;
+            default:
+        }
+    }
+
+    private void printInt(TypeRegisterPair typeRegisterPair){
+        System.out.println("\tcall void (i32) @print_int(i32 " + typeRegisterPair.getRegister() + ")");
     }
 
     private String dereference(String type){
