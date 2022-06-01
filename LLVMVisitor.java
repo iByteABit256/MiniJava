@@ -452,11 +452,10 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> PrimaryExpression()
      */
     public Object visit(MinusExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        TypeRegisterPair left = (TypeRegisterPair) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        TypeRegisterPair right = (TypeRegisterPair) n.f2.accept(this, argu);
+        return rm.subRegisters(left, right);
     }
 
     /**
@@ -465,11 +464,10 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> PrimaryExpression()
      */
     public Object visit(TimesExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        TypeRegisterPair left = (TypeRegisterPair) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        TypeRegisterPair right = (TypeRegisterPair) n.f2.accept(this, argu);
+        return rm.mulRegisters(left, right);
     }
 
     /**

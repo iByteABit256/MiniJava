@@ -62,6 +62,20 @@ public class RegisterManager {
         return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
     }
 
+    public TypeRegisterPair subRegisters(TypeRegisterPair left, TypeRegisterPair right){
+        TypeRegisterPair loadedLeft = loadRegister(left);
+        TypeRegisterPair loadedRight = loadRegister(right);
+        System.out.println("\t" + currentReg() + " = sub " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
+        return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
+    }
+
+    public TypeRegisterPair mulRegisters(TypeRegisterPair left, TypeRegisterPair right){
+        TypeRegisterPair loadedLeft = loadRegister(left);
+        TypeRegisterPair loadedRight = loadRegister(right);
+        System.out.println("\t" + currentReg() + " = mul " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
+        return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
+    }
+
     public TypeRegisterPair getRegisterFromID(String id){
         return registers.get(id);
     }
