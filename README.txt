@@ -1,6 +1,6 @@
 
             ----------------------------------
-                    Compilers Project 2
+                    Compilers Project 2 & 3
                             ---
             MiniJava Storage and Type Checking
                             ---
@@ -15,7 +15,7 @@ Compilation:
 > make
 
 Execution:
-> java -classpath out/production/Compilers2/ Main [inputFiles]
+> java -classpath out/production/MiniJava/ Main [inputFiles]
 
 Cleanup:
 > make clean

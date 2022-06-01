@@ -12,18 +12,18 @@ public class DatatypeMapper {
     }
 
     public static String datatypeToLLVM(String type){
+        if(type.matches("(i32|i1|i8)\\**")){
+            return type;
+        }
+
         switch (type) {
             case "int":
-            case "i32":
                 return "i32";
             case "boolean":
-            case "i1":
                 return "i1";
             case "int[]":
-            case "i32*":
                 return "i32*";
             case "boolean[]":
-            case "i1*":
                 return "i1*";
             case "void":
             case "static void":
