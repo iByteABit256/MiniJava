@@ -74,21 +74,43 @@ public class RegisterManager {
         return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
     }
 
+    public TypeRegisterPair xorRegister(TypeRegisterPair reg){
+        TypeRegisterPair loaded = loadRegister(reg);
+        System.out.println("\t" + currentReg() + " = xor " + loaded.getType() + " " + loaded.getRegister() + ", true");
+        return new TypeRegisterPair(loaded.getType(), "%_" + registerCounter++);
+    }
+
+//    public TypeRegisterPair calloc(String type, TypeRegisterPair size){
+//        size = loadRegister(size);
+//        System.out.println("\t%_" + registerCounter++ + " = call i8* @calloc(i32 " +
+//                DatatypeMapper.datatypeToBytes(type) + ", i32 " + size.getRegister() + ")");
+//        System.out.println("\t" + currentReg() + " = bitcast i8* %_" + (registerCounter-1) + " to " + reference(type));
+//        return new TypeRegisterPair(reference(type), "%_" + registerCounter++);
+//    }
+
+    public TypeRegisterPair callocIntArray(String type, TypeRegisterPair size){
+        size = loadRegister(size);
+        System.out.println("\t%_" + registerCounter++ + " = call i8* @calloc(i32 " +
+                DatatypeMapper.datatypeToBytes(type) + ", i32 " + size.getRegister() + ")");
+        System.out.println("\t" + currentReg() + " = bitcast i8* %_" + (registerCounter-1) + " to " + reference(type));
+        return new TypeRegisterPair(reference(type), "%_" + registerCounter++);
+    }
+
+    public TypeRegisterPair getArrayElement(TypeRegisterPair arr, TypeRegisterPair idx){
+        TypeRegisterPair loadedIdx = loadRegister(idx);
+        String type = arr.getType();
+        String dereferencedType = dereference(type);
+        System.out.println("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
+                type + " " + arr.getRegister() + ", i32 0, i32 " + loadedIdx.getRegister());
+        return new TypeRegisterPair(dereferencedType, "%_" + registerCounter++);
+    }
+
     public TypeRegisterPair getRegisterFromID(String id){
         return registers.get(id);
     }
 
     public void print(TypeRegisterPair typeRegisterPair){
         typeRegisterPair = loadRegister(typeRegisterPair);
-        switch (typeRegisterPair.getType()){
-            case "i32":
-                printInt(typeRegisterPair);
-                break;
-            default:
-        }
-    }
-
-    private void printInt(TypeRegisterPair typeRegisterPair){
         System.out.println("\tcall void (i32) @print_int(i32 " + typeRegisterPair.getRegister() + ")");
     }
 

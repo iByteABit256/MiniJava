@@ -499,12 +499,11 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> "]"
      */
     public Object visit(ArrayLookup n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
+        TypeRegisterPair arr = (TypeRegisterPair) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        TypeRegisterPair idx = (TypeRegisterPair) n.f2.accept(this, argu);
         n.f3.accept(this, argu);
-        return _ret;
+        return rm.getArrayElement(arr, idx);
     }
 
     /**
@@ -695,13 +694,8 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f4 -> "]"
      */
     public Object visit(IntegerArrayAllocationExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        return _ret;
+        TypeRegisterPair size = (TypeRegisterPair) n.f3.accept(this, argu);
+        return rm.callocIntArray("i32", size);
     }
 
     /**
@@ -724,10 +718,8 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> Clause()
      */
     public Object visit(NotExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        return _ret;
+        TypeRegisterPair typeRegisterPair = (TypeRegisterPair) n.f1.accept(this, argu);
+        return rm.xorRegister(typeRegisterPair);
     }
 
     /**
