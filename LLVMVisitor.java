@@ -386,15 +386,22 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(IfStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
+        TypeRegisterPair condition = (TypeRegisterPair) n.f2.accept(this, argu);
+        TypeRegisterPair label1 = new TypeRegisterPair();
+        TypeRegisterPair label2 = new TypeRegisterPair();
+        TypeRegisterPair exit = rm.ifStatement(condition, label1, label2);
+
+        System.out.println(label1.getRegister().substring(1) + ":");
         n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
+        System.out.println("\tbr label " + exit.getRegister() + "\n");
+
+        System.out.println(label2.getRegister().substring(1) + ":");
         n.f6.accept(this, argu);
-        return _ret;
+        System.out.println("\tbr label " + exit.getRegister() + "\n");
+
+        System.out.println(exit.getRegister().substring(1) + ":");
+
+        return null;
     }
 
     /**
@@ -458,11 +465,9 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(AndExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        TypeRegisterPair left = (TypeRegisterPair) n.f0.accept(this, argu);
+        TypeRegisterPair right = (TypeRegisterPair) n.f2.accept(this, argu);
+        return rm.and(left, right);
     }
 
     /**
@@ -472,11 +477,9 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(CompareExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        TypeRegisterPair left = (TypeRegisterPair) n.f0.accept(this, argu);
+        TypeRegisterPair right = (TypeRegisterPair) n.f2.accept(this, argu);
+        return rm.lessThan(left, right);
     }
 
     /**
@@ -765,11 +768,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(BracketExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        return n.f1.accept(this, argu);
     }
 
     private String getNameFromPair(Object o) {

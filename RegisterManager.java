@@ -128,6 +128,44 @@ public class RegisterManager {
         return new TypeRegisterPair("i32*", "%_" + registerCounter++);
     }
 
+    public TypeRegisterPair and(TypeRegisterPair left, TypeRegisterPair right){
+        if(left.getType().contains("*")){
+            left = loadRegister(left);
+        }
+        if(right.getType().contains("*")){
+            right = loadRegister(right);
+        }
+
+        System.out.println("\t" + currentReg() + " = and i1 " + left.getRegister() + ", " + right.getRegister());
+        return new TypeRegisterPair("i1", "%_" + registerCounter++);
+    }
+
+    public TypeRegisterPair lessThan(TypeRegisterPair left, TypeRegisterPair right){
+        if(left.getType().contains("*")){
+            left = loadRegister(left);
+        }
+        if(right.getType().contains("*")){
+            right = loadRegister(right);
+        }
+
+        System.out.println("\t" + currentReg() + " = icmp slt i32 " + left.getRegister() + ", " + right.getRegister());
+        return new TypeRegisterPair("i1", "%_" + registerCounter++);
+    }
+
+    public TypeRegisterPair ifStatement(TypeRegisterPair condition, TypeRegisterPair label1, TypeRegisterPair label2){
+        if(condition.getType().contains("*")){
+            condition = loadRegister(condition);
+        }
+
+        label1.setRegister("%label" + registerCounter++);
+        label2.setRegister("%label" + registerCounter++);
+
+        System.out.println("\tbr i1 " + condition.getRegister() + ", label " + label1.getRegister() + ", label " + label2.getRegister());
+        System.out.println();
+
+        return new TypeRegisterPair(null, "%label" + registerCounter++);
+    }
+
     public TypeRegisterPair getRegisterFromID(String id){
         return registers.get(id);
     }
