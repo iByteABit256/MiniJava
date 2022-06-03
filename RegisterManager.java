@@ -80,29 +80,52 @@ public class RegisterManager {
         return new TypeRegisterPair(loaded.getType(), "%_" + registerCounter++);
     }
 
-//    public TypeRegisterPair calloc(String type, TypeRegisterPair size){
-//        size = loadRegister(size);
-//        System.out.println("\t%_" + registerCounter++ + " = call i8* @calloc(i32 " +
-//                DatatypeMapper.datatypeToBytes(type) + ", i32 " + size.getRegister() + ")");
-//        System.out.println("\t" + currentReg() + " = bitcast i8* %_" + (registerCounter-1) + " to " + reference(type));
-//        return new TypeRegisterPair(reference(type), "%_" + registerCounter++);
-//    }
-
-    public TypeRegisterPair callocIntArray(String type, TypeRegisterPair size){
+    public TypeRegisterPair calloc(String type, TypeRegisterPair size){
         size = loadRegister(size);
+        System.out.println("\t" + currentReg() + " = add i32 " + size.getRegister() + ", " + (type.equals("i1")? 4 : 1));
+        TypeRegisterPair total = new TypeRegisterPair("i32", "%_" + registerCounter++);
         System.out.println("\t%_" + registerCounter++ + " = call i8* @calloc(i32 " +
-                DatatypeMapper.datatypeToBytes(type) + ", i32 " + size.getRegister() + ")");
+                DatatypeMapper.datatypeToBytes(dereference(type)) + ", i32 " + total.getRegister() + ")");
         System.out.println("\t" + currentReg() + " = bitcast i8* %_" + (registerCounter-1) + " to " + reference(type));
+
+        // Size metadata
+        if(type.equals("i1")){
+            System.out.println("\t%_" + ++registerCounter + " = bitcast i1* %_" + (registerCounter-1) + " to i32*");
+            System.out.println("\tstore i32 " + size.getRegister() + ", i32* " + currentReg());
+            return new TypeRegisterPair("i1*", "%_" + (registerCounter++-1));
+        }
+
+        System.out.println("\tstore " + type + " " + size.getRegister() + ", " + reference(type) + " " + currentReg());
+
         return new TypeRegisterPair(reference(type), "%_" + registerCounter++);
     }
 
     public TypeRegisterPair getArrayElement(TypeRegisterPair arr, TypeRegisterPair idx){
         TypeRegisterPair loadedIdx = loadRegister(idx);
-        String type = arr.getType();
+        TypeRegisterPair loadedArr = loadRegister(arr);
+        System.out.println("\t" + currentReg() + " = add i32 " + loadedIdx.getRegister() + ", " + (loadedArr.getType().equals("i1*")? 4 : 1));
+        loadedIdx = new TypeRegisterPair("i32", "%_" + registerCounter++);
+        String type = loadedArr.getType();
         String dereferencedType = dereference(type);
         System.out.println("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
-                type + " " + arr.getRegister() + ", i32 0, i32 " + loadedIdx.getRegister());
-        return new TypeRegisterPair(dereferencedType, "%_" + registerCounter++);
+                type + " " + loadedArr.getRegister() + ", i32 " + loadedIdx.getRegister());
+        return new TypeRegisterPair(type, "%_" + registerCounter++);
+    }
+
+    public TypeRegisterPair getArrayLength(TypeRegisterPair arr){
+        TypeRegisterPair loadedArr = loadRegister(arr);
+        String type = loadedArr.getType();
+
+        if(type.equals("i1*")){
+            System.out.println("\t%_" + registerCounter++ + " = bitcast i1* " + loadedArr.getRegister() + " to i32*");
+            System.out.println("\t" + currentReg() + " = getelementptr i32, i32* %_" + (registerCounter-1) + ", i32 0");
+            return new TypeRegisterPair("i32*", "%_" + registerCounter++);
+        }
+
+        String dereferencedType = dereference(type);
+        System.out.println("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
+                type + " " + loadedArr.getRegister() + ", i32 " + 0);
+        return new TypeRegisterPair("i32*", "%_" + registerCounter++);
     }
 
     public TypeRegisterPair getRegisterFromID(String id){

@@ -3,6 +3,7 @@ import visitor.GJDepthFirst;
 
 import java.util.HashMap;
 
+
 public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     private SymbolTable st;
     private ContextManager cm = new ContextManager();
@@ -53,6 +54,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f16 -> "}"
      * f17 -> "}"
      */
+    @Override
     public Object visit(MainClass n, Object argu) throws Exception {
         n.f0.accept(this, argu);
         String mainClassName = getNameFromPair(n.f1.accept(this, argu));
@@ -97,6 +99,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f4 -> ( MethodDeclaration() )*
      * f5 -> "}"
      */
+    @Override
     public Object visit(ClassDeclaration n, Object argu) throws Exception {
         n.f0.accept(this, argu);
         String className = getNameFromPair(n.f1.accept(this, argu));
@@ -120,6 +123,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f6 -> ( MethodDeclaration() )*
      * f7 -> "}"
      */
+    @Override
     public Object visit(ClassExtendsDeclaration n, Object argu) throws Exception {
         n.f0.accept(this, argu);
         String className = getNameFromPair(n.f1.accept(this, argu));
@@ -150,6 +154,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f11 -> ";"
      * f12 -> "}"
      */
+    @Override
     public Object visit(MethodDeclaration n, Object argu) throws Exception {
         Object _ret=null;
 
@@ -190,6 +195,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> FormalParameter()
      * f1 -> FormalParameterTail()
      */
+    @Override
     public Object visit(FormalParameterList n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -201,6 +207,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> Type()
      * f1 -> Identifier()
      */
+    @Override
     public Object visit(FormalParameter n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -213,6 +220,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> Identifier()
      * f2 -> ";"
      */
+    @Override
     public Object visit(VarDeclaration n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -224,6 +232,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> ( FormalParameterTerm() )*
      */
+    @Override
     public Object visit(FormalParameterTail n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -232,6 +241,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> ","
      * f1 -> FormalParameter()
      */
+    @Override
     public Object visit(FormalParameterTerm n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -245,6 +255,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      *       | IntegerType()
      *       | Identifier()
      */
+    @Override
     public Object visit(Type n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -253,6 +264,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> BooleanArrayType()
      *       | IntegerArrayType()
      */
+    @Override
     public Object visit(ArrayType n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -262,6 +274,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> "["
      * f2 -> "]"
      */
+    @Override
     public Object visit(BooleanArrayType n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -275,6 +288,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> "["
      * f2 -> "]"
      */
+    @Override
     public Object visit(IntegerArrayType n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -286,6 +300,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> "boolean"
      */
+    @Override
     public Object visit(BooleanType n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -293,6 +308,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> "int"
      */
+    @Override
     public Object visit(IntegerType n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -305,6 +321,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      *       | WhileStatement()
      *       | PrintStatement()
      */
+    @Override
     public Object visit(Statement n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -314,6 +331,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> ( Statement() )*
      * f2 -> "}"
      */
+    @Override
     public Object visit(Block n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -328,6 +346,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> Expression()
      * f3 -> ";"
      */
+    @Override
     public Object visit(AssignmentStatement n, Object argu) throws Exception {
         TypeRegisterPair left = (TypeRegisterPair) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
@@ -346,16 +365,14 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f5 -> Expression()
      * f6 -> ";"
      */
+    @Override
     public Object visit(ArrayAssignmentStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        n.f6.accept(this, argu);
-        return _ret;
+        TypeRegisterPair arr = (TypeRegisterPair) n.f0.accept(this, argu);
+        TypeRegisterPair idx = (TypeRegisterPair) n.f2.accept(this, argu);
+        TypeRegisterPair arrayElement = rm.getArrayElement(arr, idx);
+        TypeRegisterPair expr = (TypeRegisterPair) n.f5.accept(this, argu);
+        rm.storeInRegister(arrayElement, expr);
+        return null;
     }
 
     /**
@@ -367,6 +384,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f5 -> "else"
      * f6 -> Statement()
      */
+    @Override
     public Object visit(IfStatement n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -386,6 +404,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> ")"
      * f4 -> Statement()
      */
+    @Override
     public Object visit(WhileStatement n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -403,6 +422,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> ")"
      * f4 -> ";"
      */
+    @Override
     public Object visit(PrintStatement n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -425,6 +445,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      *       | MessageSend()
      *       | Clause()
      */
+    @Override
     public Object visit(Expression n, Object argu) throws Exception {
         TypeRegisterPair typeRegisterPair = (TypeRegisterPair) n.f0.accept(this, argu);
         return typeRegisterPair;
@@ -435,6 +456,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> "&&"
      * f2 -> Clause()
      */
+    @Override
     public Object visit(AndExpression n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -448,6 +470,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> "<"
      * f2 -> PrimaryExpression()
      */
+    @Override
     public Object visit(CompareExpression n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -461,6 +484,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> "+"
      * f2 -> PrimaryExpression()
      */
+    @Override
     public Object visit(PlusExpression n, Object argu) throws Exception {
         TypeRegisterPair left = (TypeRegisterPair) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
@@ -473,6 +497,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> "-"
      * f2 -> PrimaryExpression()
      */
+    @Override
     public Object visit(MinusExpression n, Object argu) throws Exception {
         TypeRegisterPair left = (TypeRegisterPair) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
@@ -485,6 +510,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> "*"
      * f2 -> PrimaryExpression()
      */
+    @Override
     public Object visit(TimesExpression n, Object argu) throws Exception {
         TypeRegisterPair left = (TypeRegisterPair) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
@@ -498,6 +524,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> PrimaryExpression()
      * f3 -> "]"
      */
+    @Override
     public Object visit(ArrayLookup n, Object argu) throws Exception {
         TypeRegisterPair arr = (TypeRegisterPair) n.f0.accept(this, argu);
         n.f1.accept(this, argu);
@@ -511,12 +538,10 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> "."
      * f2 -> "length"
      */
+    @Override
     public Object visit(ArrayLength n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        TypeRegisterPair arr = (TypeRegisterPair) n.f0.accept(this, argu);
+        return rm.getArrayLength(arr);
     }
 
     /**
@@ -527,6 +552,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f4 -> ( ExpressionList() )?
      * f5 -> ")"
      */
+    @Override
     public Object visit(MessageSend n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -542,6 +568,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> Expression()
      * f1 -> ExpressionTail()
      */
+    @Override
     public Object visit(ExpressionList n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -552,6 +579,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> ( ExpressionTerm() )*
      */
+    @Override
     public Object visit(ExpressionTail n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -560,6 +588,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> ","
      * f1 -> Expression()
      */
+    @Override
     public Object visit(ExpressionTerm n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -571,6 +600,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> NotExpression()
      *       | PrimaryExpression()
      */
+    @Override
     public Object visit(Clause n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -585,6 +615,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      *       | AllocationExpression()
      *       | BracketExpression()
      */
+    @Override
     public Object visit(PrimaryExpression n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -592,6 +623,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> <INTEGER_LITERAL>
      */
+    @Override
     public Object visit(IntegerLiteral n, Object argu) throws Exception {
         String val = n.f0.toString();
         return rm.allocateRegisterWithValue("i32", val);
@@ -600,6 +632,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> "true"
      */
+    @Override
     public Object visit(TrueLiteral n, Object argu) throws Exception {
         return rm.allocateRegisterWithValue("i1", "true");
     }
@@ -607,6 +640,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> "false"
      */
+    @Override
     public Object visit(FalseLiteral n, Object argu) throws Exception {
         return rm.allocateRegisterWithValue("i1", "false");
     }
@@ -614,6 +648,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> <IDENTIFIER>
      */
+    @Override
     public TypeRegisterPair visit(Identifier n, Object argu) throws Exception {
         String id = n.f0.toString();
         Class classContext = cm.getClassCtx();
@@ -657,6 +692,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     /**
      * f0 -> "this"
      */
+    @Override
     public Object visit(ThisExpression n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -665,6 +701,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> BooleanArrayAllocationExpression()
      *       | IntegerArrayAllocationExpression()
      */
+    @Override
     public Object visit(ArrayAllocationExpression n, Object argu) throws Exception {
         return n.f0.accept(this, argu);
     }
@@ -676,14 +713,10 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> Expression()
      * f4 -> "]"
      */
+    @Override
     public Object visit(BooleanArrayAllocationExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        return _ret;
+        TypeRegisterPair size = (TypeRegisterPair) n.f3.accept(this, argu);
+        return rm.calloc("i1", size);
     }
 
     /**
@@ -693,9 +726,10 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f3 -> Expression()
      * f4 -> "]"
      */
+    @Override
     public Object visit(IntegerArrayAllocationExpression n, Object argu) throws Exception {
         TypeRegisterPair size = (TypeRegisterPair) n.f3.accept(this, argu);
-        return rm.callocIntArray("i32", size);
+        return rm.calloc("i32", size);
     }
 
     /**
@@ -704,6 +738,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f2 -> "("
      * f3 -> ")"
      */
+    @Override
     public Object visit(AllocationExpression n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);
@@ -717,6 +752,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f0 -> "!"
      * f1 -> Clause()
      */
+    @Override
     public Object visit(NotExpression n, Object argu) throws Exception {
         TypeRegisterPair typeRegisterPair = (TypeRegisterPair) n.f1.accept(this, argu);
         return rm.xorRegister(typeRegisterPair);
@@ -727,6 +763,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      * f1 -> Expression()
      * f2 -> ")"
      */
+    @Override
     public Object visit(BracketExpression n, Object argu) throws Exception {
         Object _ret=null;
         n.f0.accept(this, argu);

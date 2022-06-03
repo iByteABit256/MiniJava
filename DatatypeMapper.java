@@ -3,8 +3,10 @@ public class DatatypeMapper {
     public static int datatypeToBytes(String type){
         switch (type) {
             case "int":
+            case "i32":
                 return 4;
             case "boolean":
+            case "i1":
                 return 1;
             default:
                 return 8;
