@@ -538,9 +538,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     @Override
     public Object visit(ArrayLookup n, Object argu) throws Exception {
         TypeRegisterPair arr = (TypeRegisterPair) n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
         TypeRegisterPair idx = (TypeRegisterPair) n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
         return rm.getArrayElement(arr, idx);
     }
 

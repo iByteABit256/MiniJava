@@ -103,13 +103,38 @@ public class RegisterManager {
     public TypeRegisterPair getArrayElement(TypeRegisterPair arr, TypeRegisterPair idx){
         TypeRegisterPair loadedIdx = loadRegister(idx);
         TypeRegisterPair loadedArr = loadRegister(arr);
+
+        // Check for index out of bounds
+        TypeRegisterPair length = getArrayLength(arr);
+        TypeRegisterPair condition = lessThan(loadedIdx, length);
+        TypeRegisterPair label1 = new TypeRegisterPair();
+        TypeRegisterPair label2 = new TypeRegisterPair();
+        TypeRegisterPair exit = ifStatement(condition, label1, label2);
+
+        // Valid index
+        System.out.println(label1.getRegister().substring(1) + ":");
         System.out.println("\t" + currentReg() + " = add i32 " + loadedIdx.getRegister() + ", " + (loadedArr.getType().equals("i1*")? 4 : 1));
         loadedIdx = new TypeRegisterPair("i32", "%_" + registerCounter++);
         String type = loadedArr.getType();
         String dereferencedType = dereference(type);
         System.out.println("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
                 type + " " + loadedArr.getRegister() + ", i32 " + loadedIdx.getRegister());
-        return new TypeRegisterPair(type, "%_" + registerCounter++);
+        String elementReg = "%_" + registerCounter++;
+        System.out.println("\tbr label " + exit.getRegister() + "\n");
+
+        // Invalid index
+        System.out.println(label2.getRegister().substring(1) + ":");
+        handleOutOfBoundsException();
+        System.out.println("\tbr label " + exit.getRegister() + "\n");
+
+        // Continue execution
+        System.out.println(exit.getRegister().substring(1) + ":");
+
+        return new TypeRegisterPair(type, elementReg);
+    }
+
+    public void handleOutOfBoundsException(){
+        System.out.println("\tcall void @throw_oob()");
     }
 
     public TypeRegisterPair getArrayLength(TypeRegisterPair arr){
