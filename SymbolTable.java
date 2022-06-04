@@ -26,8 +26,10 @@ public class SymbolTable {
 
     public void showVTable(){
         this.classTable.values().forEach(c -> {
-            c.setVTableEntry();
-            System.out.println(c.getVTableEntry());
+            if(!c.getMethods().containsKey("main")) {
+                c.setVTableEntry();
+                System.out.println(c.getVTableEntry());
+            }
         });
         System.out.println();
     }
