@@ -413,13 +413,21 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(WhileStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
+        TypeRegisterPair conditionCheck = new TypeRegisterPair();
+        TypeRegisterPair body = new TypeRegisterPair();
+        TypeRegisterPair exit = rm.whileStatement(conditionCheck, body);
+
+        System.out.println(conditionCheck.getRegister().substring(1) + ":");
+        TypeRegisterPair condition = (TypeRegisterPair) n.f2.accept(this, argu);
+        rm.loopConditionCheck(condition, body, exit);
+
+        System.out.println(body.getRegister().substring(1) + ":");
         n.f4.accept(this, argu);
-        return _ret;
+        System.out.println("\tbr label " + conditionCheck.getRegister() + "\n");
+
+        System.out.println(exit.getRegister().substring(1) + ":");
+
+        return null;
     }
 
     /**

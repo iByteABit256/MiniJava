@@ -166,6 +166,25 @@ public class RegisterManager {
         return new TypeRegisterPair(null, "%label" + registerCounter++);
     }
 
+    public void loopConditionCheck(TypeRegisterPair condition, TypeRegisterPair body, TypeRegisterPair exit){
+        if(condition.getType().contains("*")){
+            condition = loadRegister(condition);
+        }
+
+        System.out.println("\tbr i1 " + condition.getRegister() + ", label " + body.getRegister() + ", label " + exit.getRegister());
+        System.out.println();
+    }
+
+    public TypeRegisterPair whileStatement(TypeRegisterPair conditionCheck, TypeRegisterPair body){
+        conditionCheck.setRegister("%label" + registerCounter++);
+        body.setRegister("%label" + registerCounter++);
+
+        System.out.println("\tbr label " + conditionCheck.getRegister());
+        System.out.println();
+
+        return new TypeRegisterPair(null, "%label" + registerCounter++);
+    }
+
     public TypeRegisterPair getRegisterFromID(String id){
         return registers.get(id);
     }
