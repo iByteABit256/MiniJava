@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Class {
@@ -46,6 +48,11 @@ public class Class {
         str += "\n";
 
         return str;
+    }
+
+    public int size() {
+        int sum = this.fields.values().stream().map(DatatypeMapper::datatypeToBytes).mapToInt(Integer::intValue).sum();
+        return sum + DatatypeMapper.datatypeToBytes("i8*");
     }
 
     public LinkedHashMap<String, String> getFields() {
@@ -106,6 +113,19 @@ public class Class {
         }
     }
 
+    public String getVTableRef() {
+        return VTableEntry.split(" ")[0];
+    }
+
+    public String getVTableType() {
+        Pattern pattern = Pattern.compile("\\[[0-9]+ x i8\\*]");
+        Matcher matcher = pattern.matcher(VTableEntry);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return null;
+    }
+
     public String getVTableEntry() {
         return VTableEntry;
     }
@@ -149,4 +169,13 @@ public class Class {
     public void setChild(Class child) {
         this.child = child;
     }
+
+    public int getFieldOffset(String id) {
+        return fieldOffsets.get(id);
+    }
+
+    public int getMethodOffset(String id) {
+        return methodOffsets.get(id);
+    }
+
 }

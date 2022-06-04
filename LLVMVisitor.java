@@ -178,12 +178,18 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         n.f7.accept(this, argu);
         n.f8.accept(this, argu);
         n.f9.accept(this, argu);
+
         TypeRegisterPair typeRegisterPair = (TypeRegisterPair) n.f10.accept(this, argu);
-        TypeRegisterPair loaded = rm.loadRegister(typeRegisterPair);
+        String returnType = DatatypeMapper.datatypeToLLVM(m.getReturnType());
+        if(!typeRegisterPair.getType().equals(returnType)) {
+            System.err.println(typeRegisterPair + ", " + returnType);
+            typeRegisterPair = rm.loadRegister(typeRegisterPair);
+        }
+
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
 
-        System.out.println("\tret " + loaded.getType() + " " + loaded.getRegister());
+        System.out.println("\tret " + typeRegisterPair.getType() + " " + typeRegisterPair.getRegister());
         System.out.println("}\n");
         cm.leaveContext();
         rm.reset();
@@ -673,29 +679,58 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
             HashMap<String, String> localVars = methodContext.getLocalVariableTypes();
             HashMap<String, String> args = methodContext.getArgumentTypes();
             if (localVars.containsKey(id)) return rm.allocateRegister(id, localVars.get(id));
-//            if (args.containsKey(id)) return rm.newRegister(args.get(id));
-            return null;
+            if (args.containsKey(id)) return rm.allocateRegister(id, args.get(id));
+
+            // Check if identifier is a class field
+            HashMap<String, String> classFields = classContext.getFields();
+            if(classFields.containsKey(id)) {
+                String VTableRef = classContext.getVTableRef();
+                String VTableType = classContext.getVTableType();
+                int offset = classContext.getFieldOffset(id);
+                return rm.allocateRegister(id, classFields.get(id), VTableRef, VTableType, classContext.size(),offset);
+            }
+
+            // Check if identifier is a parent class field
+            Class parent = classContext.getParent();
+            while(parent != null){
+                HashMap<String, String> parentClassFields = parent.getFields();
+                if(parentClassFields.containsKey(id)) {
+                    String VTableRef = parent.getVTableRef();
+                    String VTableType = parent.getVTableType();
+                    int offset = parent.getFieldOffset(id);
+                    return rm.allocateRegister(id, parentClassFields.get(id), VTableRef, VTableType, parent.size(), offset);
+                }
+                parent = parent.getParent();
+            }
         }
-        if(classContext != null){
-//            // Check if identifier is a class field
-//            HashMap<String, String> classFields = classContext.getFields();
-//            if(classFields.containsKey(id)) return rm.newRegister(classFields.get(id));
-//
-//            // Check if identifier is a parent class field
-//            Class parent = classContext.getParent();
-//            while(parent != null){
-//                HashMap<String, String> parentClassFields = parent.getFields();
-//                if(parentClassFields.containsKey(id)) return rm.newRegister(parentClassFields.get(id));
-//                parent = parent.getParent();
-//            }
-        }
+
         // Check if identifier is a class or method
-        if(st.getClassTable().containsKey(id)) return new TypeRegisterPair("class", id);
-        for(Class c : st.getClassTable().values()){
-            if(c.getMethods().containsKey(id)) return new TypeRegisterPair("method", id);
+        if(st.getClassTable().containsKey(id)) {
+            Class c = st.getClassTable().get(id);
+
+            if(c.getMethods().containsKey("main")){
+                return new TypeRegisterPair("i8", id);
+            }
+
+            String VTableRef = c.getVTableRef();
+            String VTableType = c.getVTableType();
+            return new TypeRegisterPair("i8", id, VTableRef, VTableType, c.size(), 0);
         }
-        // Identifier was not declared
-        throw new MiniJavaException("No declared identifier " + id);
+
+        if(id.equals("main")){
+            return new TypeRegisterPair("i8*", id);
+        }
+
+        for(Class c : st.getClassTable().values()){
+            if(c.getMethods().containsKey(id)) {
+                String VTableRef = c.getVTableRef();
+                String VTableType = c.getVTableType();
+                int offset = c.getMethodOffset(id);
+                return new TypeRegisterPair("i8*", id, VTableRef, VTableType, c.size(), offset);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -749,12 +784,8 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(AllocationExpression n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        return _ret;
+        TypeRegisterPair id = (TypeRegisterPair) n.f1.accept(this, argu);
+        return rm.calloc(id.getType(), id);
     }
 
     /**

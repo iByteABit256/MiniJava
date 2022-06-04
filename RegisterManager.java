@@ -8,6 +8,17 @@ public class RegisterManager {
         this.registerCounter = 0;
     }
 
+    public TypeRegisterPair allocateRegister(String id, String type, String VTableRef, String VTableType, int size, int offset){
+        type = DatatypeMapper.datatypeToLLVM(type);
+        TypeRegisterPair reg = allocateRegister(type);
+        reg.setVTableRef(VTableRef);
+        reg.setVTableType(VTableType);
+        reg.setSize(size);
+        reg.setOffset(offset);
+        registers.put(id, reg);
+        return reg;
+    }
+
     public TypeRegisterPair allocateRegister(String id, String type){
         type = DatatypeMapper.datatypeToLLVM(type);
         TypeRegisterPair reg = allocateRegister(type);
@@ -81,6 +92,23 @@ public class RegisterManager {
     }
 
     public TypeRegisterPair calloc(String type, TypeRegisterPair size){
+        /**
+         * Classes
+         */
+        if(type.equals("i8")) {
+            String registerToAllocateTo = currentReg();
+            System.out.println("\t%_" + registerCounter++ + " = call i8* @calloc(i32 1, i32 " + size.getSize() + ")");
+            System.out.println("\t%_" + registerCounter + " = bitcast i8* %_" + (registerCounter++ - 1) + " to i8***");
+            System.out.println("\t%_" + registerCounter++ + " = getelementptr " + size.getVTableType() + ", "
+                    + reference(size.getVTableType()) + " " + size.getVTableRef() + ", i32 0, i32 0");
+            System.out.println("\tstore i8** %_" + (registerCounter - 1) + ", i8*** %_" + (registerCounter++ - 2));
+
+            return new TypeRegisterPair("i8*", registerToAllocateTo);
+        }
+
+        /**
+         * Arrays
+         */
         size = loadRegister(size);
         System.out.println("\t" + currentReg() + " = add i32 " + size.getRegister() + ", " + (type.equals("i1")? 4 : 1));
         TypeRegisterPair total = new TypeRegisterPair("i32", "%_" + registerCounter++);
