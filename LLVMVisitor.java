@@ -570,7 +570,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(MessageSend n, Object argu) throws Exception {
-        TypeRegisterPair c = (TypeRegisterPair) n.f0.accept(this, argu);
+        TypeRegisterPair c = (TypeRegisterPair) n.f0.accept(this, true);
         TypeRegisterPair m = (TypeRegisterPair) n.f2.accept(this, c.getVTableRef());
         System.err.println(c.getVTableRef());
         System.err.println(m.getMethodReturnType());
@@ -785,7 +785,14 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(AllocationExpression n, Object argu) throws Exception {
-        TypeRegisterPair id = (TypeRegisterPair) n.f1.accept(this, argu);
+        boolean createTempObject = (boolean) argu;
+        TypeRegisterPair id = (TypeRegisterPair) n.f1.accept(this, null);
+        if(createTempObject) {
+            TypeRegisterPair var = rm.allocateRegister(null, id.getType() + "*", id.getVTableRef(), id.getVTableType(), id.getSize(), id.getOffset(), null);
+            TypeRegisterPair val = rm.calloc(id.getType(), id);
+            rm.storeInRegister(var, val);
+            return var;
+        }
         return rm.calloc(id.getType(), id);
     }
 

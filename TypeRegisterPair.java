@@ -81,4 +81,9 @@ public class TypeRegisterPair {
     public void setMethodReturnType(String methodReturnType) {
         this.methodReturnType = methodReturnType;
     }
+
+    public String getName(){
+        return VTableRef.replaceAll("(@.|_vtable)", "");
+    }
+
 }
