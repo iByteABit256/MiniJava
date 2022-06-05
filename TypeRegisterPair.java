@@ -4,6 +4,7 @@ public class TypeRegisterPair {
     private String VTableRef;
     private String VTableType;
     private String methodReturnType;
+    private Method method;
     private int size;
     private int offset;
 
@@ -23,6 +24,17 @@ public class TypeRegisterPair {
         this.VTableType = VTableType;
         this.offset = offset;
         this.size = size;
+    }
+
+    public TypeRegisterPair(String type, String register, Class c, int offset){
+        this.type = type;
+        this.register = register;
+        this.VTableRef = c.getVTableRef();
+        this.VTableType = c.getVTableType();
+        this.offset = offset;
+        this.size = c.size();
+        this.method = c.getMethods().get(register);
+        this.methodReturnType = DatatypeMapper.datatypeToLLVM(method.getReturnType());
     }
 
     public String getType() {
@@ -86,4 +98,11 @@ public class TypeRegisterPair {
         return VTableRef.replaceAll("(@.|_vtable)", "");
     }
 
+    public Method getMethod() {
+        return method;
+    }
+
+    public void setMethod(Method method) {
+        this.method = method;
+    }
 }

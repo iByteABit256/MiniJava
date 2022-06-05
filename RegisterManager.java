@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 public class RegisterManager {
     private HashMap<String, TypeRegisterPair> registers = new HashMap<>();
@@ -87,28 +86,49 @@ public class RegisterManager {
     }
 
     public TypeRegisterPair addRegisters(TypeRegisterPair left, TypeRegisterPair right){
-        TypeRegisterPair loadedLeft = loadRegister(left);
-        TypeRegisterPair loadedRight = loadRegister(right);
+        TypeRegisterPair loadedLeft = left;
+        TypeRegisterPair loadedRight = right;
+        if(left.getType().contains("*")){
+            loadedLeft = loadRegister(left);
+        }
+        if(right.getType().contains("*")) {
+            loadedRight = loadRegister(right);
+        }
         System.out.println("\t" + currentReg() + " = add " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
         return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
     }
 
     public TypeRegisterPair subRegisters(TypeRegisterPair left, TypeRegisterPair right){
-        TypeRegisterPair loadedLeft = loadRegister(left);
-        TypeRegisterPair loadedRight = loadRegister(right);
+        TypeRegisterPair loadedLeft = left;
+        TypeRegisterPair loadedRight = right;
+        if(left.getType().contains("*")){
+            loadedLeft = loadRegister(left);
+        }
+        if(right.getType().contains("*")) {
+            loadedRight = loadRegister(right);
+        }
         System.out.println("\t" + currentReg() + " = sub " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
         return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
     }
 
     public TypeRegisterPair mulRegisters(TypeRegisterPair left, TypeRegisterPair right){
-        TypeRegisterPair loadedLeft = loadRegister(left);
-        TypeRegisterPair loadedRight = loadRegister(right);
+        TypeRegisterPair loadedLeft = left;
+        TypeRegisterPair loadedRight = right;
+        if(left.getType().contains("*")){
+            loadedLeft = loadRegister(left);
+        }
+        if(right.getType().contains("*")) {
+            loadedRight = loadRegister(right);
+        }
         System.out.println("\t" + currentReg() + " = mul " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
         return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
     }
 
     public TypeRegisterPair xorRegister(TypeRegisterPair reg){
-        TypeRegisterPair loaded = loadRegister(reg);
+        TypeRegisterPair loaded = reg;
+        if(reg.getType().contains("*")) {
+            loaded = loadRegister(reg);
+        }
         System.out.println("\t" + currentReg() + " = xor " + loaded.getType() + " " + loaded.getRegister() + ", true");
         return new TypeRegisterPair(loaded.getType(), "%_" + registerCounter++);
     }
@@ -133,7 +153,9 @@ public class RegisterManager {
         /**
          * Arrays
          */
-        size = loadRegister(size);
+        if(size.getType().contains("*")) {
+            size = loadRegister(size);
+        }
         System.out.println("\t" + currentReg() + " = add i32 " + size.getRegister() + ", " + (type.equals("i1")? 4 : 1));
         TypeRegisterPair total = new TypeRegisterPair("i32", "%_" + registerCounter++);
         System.out.println("\t%_" + registerCounter++ + " = call i8* @calloc(i32 " +
@@ -153,7 +175,10 @@ public class RegisterManager {
     }
 
     public TypeRegisterPair getArrayElement(TypeRegisterPair arr, TypeRegisterPair idx){
-        TypeRegisterPair loadedIdx = loadRegister(idx);
+        TypeRegisterPair loadedIdx = idx;
+        if(idx.getType().contains("*")){
+            loadedIdx = loadRegister(idx);
+        }
         TypeRegisterPair loadedArr = loadRegister(arr);
 
         // Check for index out of bounds
@@ -262,11 +287,17 @@ public class RegisterManager {
         return new TypeRegisterPair(null, "%label" + registerCounter++);
     }
 
-    public TypeRegisterPair methodCall(TypeRegisterPair c, TypeRegisterPair m, ArrayList<TypeRegisterPair> expressions){
+    public TypeRegisterPair methodCall(TypeRegisterPair c, TypeRegisterPair m, ArrayList<TypeRegisterPair> expressions, Method method){
         if(c.getType().contains("**")){
             c = loadRegister(c);
         }
-        expressions = new ArrayList<>(expressions.stream().map(this::loadRegister).collect(Collectors.toList()));
+
+        ArrayList<String> paramTypes = new ArrayList<>(method.getArgumentTypes().values());
+        for(int i = 0; i < expressions.size(); i++){
+            if(!expressions.get(i).getType().equals(DatatypeMapper.datatypeToLLVM(paramTypes.get(i)))){
+                expressions.set(i, loadRegister(expressions.get(i)));
+            }
+        }
         System.out.println("\t%_" + registerCounter++ + " = bitcast i8* " + c.getRegister() + " to i8***");
         System.out.println("\t%_" + registerCounter + " = load i8**, i8*** %_" + (registerCounter++-1));
         System.out.println("\t%_" + registerCounter + " = getelementptr i8*, i8** %_" + (registerCounter++-1) + ", i32 " + m.getOffset()/8);
@@ -286,7 +317,9 @@ public class RegisterManager {
     }
 
     public void print(TypeRegisterPair typeRegisterPair){
-        typeRegisterPair = loadRegister(typeRegisterPair);
+        if(typeRegisterPair.getType().contains("*")){
+            typeRegisterPair = loadRegister(typeRegisterPair);
+        }
         System.out.println("\tcall void (i32) @print_int(i32 " + typeRegisterPair.getRegister() + ")");
     }
 

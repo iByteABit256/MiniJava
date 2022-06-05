@@ -446,14 +446,9 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(PrintStatement n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
         TypeRegisterPair typeRegisterPair = (TypeRegisterPair) n.f2.accept(this, argu);
         rm.print(typeRegisterPair);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        return _ret;
+        return null;
     }
 
     /**
@@ -576,7 +571,8 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         System.err.println(m.getMethodReturnType());
         ArrayList<TypeRegisterPair> expressions = n.f4.present()?
                 (ArrayList<TypeRegisterPair>) n.f4.accept(this, argu) : new ArrayList<>();
-        return rm.methodCall(c, m, expressions);
+
+        return rm.methodCall(c, m, expressions, m.getMethod());
     }
 
     /**
@@ -670,8 +666,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         if(callingClass != null){
             String className = callingClass.replaceAll("(@.|_vtable)", "");
             Class c = st.getClassTable().get(className);
-            TypeRegisterPair method = new TypeRegisterPair("i8*", id, callingClass, c.getVTableType(), c.size(), c.getMethodOffset(id));
-            method.setMethodReturnType(DatatypeMapper.datatypeToLLVM(c.getMethods().get(id).getReturnType()));
+            TypeRegisterPair method = new TypeRegisterPair("i8*", id, c, c.getMethodOffset(id));
             return method;
         }
 
