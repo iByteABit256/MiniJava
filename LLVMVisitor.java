@@ -67,7 +67,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         Method main = mainClass.getMethods().get("main");
         cm.enterContext(main);
 
-        System.out.println("define i32 @main()\n{");
+        System.out.println("define i32 @main(i8* %this)\n{");
 
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
@@ -739,7 +739,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(ThisExpression n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return rm.allocateRegister("this", cm.getClassCtx().getName(), st, "this");
     }
 
     /**

@@ -263,7 +263,9 @@ public class RegisterManager {
     }
 
     public TypeRegisterPair methodCall(TypeRegisterPair c, TypeRegisterPair m, ArrayList<TypeRegisterPair> expressions){
-        c = loadRegister(c);
+        if(c.getType().contains("**")){
+            c = loadRegister(c);
+        }
         expressions = new ArrayList<>(expressions.stream().map(this::loadRegister).collect(Collectors.toList()));
         System.out.println("\t%_" + registerCounter++ + " = bitcast i8* " + c.getRegister() + " to i8***");
         System.out.println("\t%_" + registerCounter + " = load i8**, i8*** %_" + (registerCounter++-1));
