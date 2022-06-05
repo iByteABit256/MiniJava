@@ -3,6 +3,7 @@ public class TypeRegisterPair {
     private String register;
     private String VTableRef;
     private String VTableType;
+    private String methodReturnType;
     private int size;
     private int offset;
 
@@ -71,5 +72,13 @@ public class TypeRegisterPair {
 
     public void setSize(int size) {
         this.size = size;
+    }
+
+    public String getMethodReturnType() {
+        return methodReturnType;
+    }
+
+    public void setMethodReturnType(String methodReturnType) {
+        this.methodReturnType = methodReturnType;
     }
 }

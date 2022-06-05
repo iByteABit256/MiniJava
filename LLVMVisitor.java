@@ -1,7 +1,9 @@
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Vector;
 
 
 public class LLVMVisitor extends GJDepthFirst<Object, Object> {
@@ -182,7 +184,6 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         TypeRegisterPair typeRegisterPair = (TypeRegisterPair) n.f10.accept(this, argu);
         String returnType = DatatypeMapper.datatypeToLLVM(m.getReturnType());
         if(!typeRegisterPair.getType().equals(returnType)) {
-            System.err.println(typeRegisterPair + ", " + returnType);
             typeRegisterPair = rm.loadRegister(typeRegisterPair);
         }
 
@@ -569,14 +570,13 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(MessageSend n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        return _ret;
+        TypeRegisterPair c = (TypeRegisterPair) n.f0.accept(this, argu);
+        TypeRegisterPair m = (TypeRegisterPair) n.f2.accept(this, c.getVTableRef());
+        System.err.println(c.getVTableRef());
+        System.err.println(m.getMethodReturnType());
+        ArrayList<TypeRegisterPair> expressions = n.f4.present()?
+                (ArrayList<TypeRegisterPair>) n.f4.accept(this, argu) : new ArrayList<>();
+        return rm.methodCall(c, m, expressions);
     }
 
     /**
@@ -585,10 +585,12 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(ExpressionList n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        return _ret;
+        ArrayList<TypeRegisterPair> expressions = new ArrayList<>();
+        expressions.add((TypeRegisterPair) n.f0.accept(this, argu));
+        for(Node node : (Vector<Node>) n.f1.accept(this, argu)){
+            expressions.add((TypeRegisterPair) node.accept(this, argu));
+        }
+        return expressions;
     }
 
     /**
@@ -596,7 +598,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(ExpressionTail n, Object argu) throws Exception {
-        return n.f0.accept(this, argu);
+        return n.f0.nodes;
     }
 
     /**
@@ -605,10 +607,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(ExpressionTerm n, Object argu) throws Exception {
-        Object _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        return _ret;
+        return n.f1.accept(this, argu);
     }
 
     /**
@@ -665,7 +664,17 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public TypeRegisterPair visit(Identifier n, Object argu) throws Exception {
+        String callingClass = (String) argu;
         String id = n.f0.toString();
+
+        if(callingClass != null){
+            String className = callingClass.replaceAll("(@.|_vtable)", "");
+            Class c = st.getClassTable().get(className);
+            TypeRegisterPair method = new TypeRegisterPair("i8*", id, callingClass, c.getVTableType(), c.size(), c.getMethodOffset(id));
+            method.setMethodReturnType(DatatypeMapper.datatypeToLLVM(c.getMethods().get(id).getReturnType()));
+            return method;
+        }
+
         Class classContext = cm.getClassCtx();
         Method methodContext = cm.getMethodCtx();
 
@@ -678,8 +687,8 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
             // Check if identifier is a method local variable or argument
             HashMap<String, String> localVars = methodContext.getLocalVariableTypes();
             HashMap<String, String> args = methodContext.getArgumentTypes();
-            if (localVars.containsKey(id)) return rm.allocateRegister(id, localVars.get(id));
-            if (args.containsKey(id)) return rm.allocateRegister(id, args.get(id));
+            if (localVars.containsKey(id)) return rm.allocateRegister(id, localVars.get(id), st, null);
+            if (args.containsKey(id)) return rm.allocateRegister(id, args.get(id), st, id);
 
             // Check if identifier is a class field
             HashMap<String, String> classFields = classContext.getFields();
@@ -687,7 +696,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
                 String VTableRef = classContext.getVTableRef();
                 String VTableType = classContext.getVTableType();
                 int offset = classContext.getFieldOffset(id);
-                return rm.allocateRegister(id, classFields.get(id), VTableRef, VTableType, classContext.size(),offset);
+                return rm.allocateRegister(id, classFields.get(id), VTableRef, VTableType, classContext.size(), offset, null);
             }
 
             // Check if identifier is a parent class field
@@ -698,7 +707,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
                     String VTableRef = parent.getVTableRef();
                     String VTableType = parent.getVTableType();
                     int offset = parent.getFieldOffset(id);
-                    return rm.allocateRegister(id, parentClassFields.get(id), VTableRef, VTableType, parent.size(), offset);
+                    return rm.allocateRegister(id, parentClassFields.get(id), VTableRef, VTableType, parent.size(), offset, null);
                 }
                 parent = parent.getParent();
             }
@@ -716,17 +725,9 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
             String VTableType = c.getVTableType();
             return new TypeRegisterPair("i8", id, VTableRef, VTableType, c.size(), 0);
         }
-
-        if(id.equals("main")){
-            return new TypeRegisterPair("i8*", id);
-        }
-
         for(Class c : st.getClassTable().values()){
             if(c.getMethods().containsKey(id)) {
-                String VTableRef = c.getVTableRef();
-                String VTableType = c.getVTableType();
-                int offset = c.getMethodOffset(id);
-                return new TypeRegisterPair("i8*", id, VTableRef, VTableType, c.size(), offset);
+                return new TypeRegisterPair("method", id);
             }
         }
 

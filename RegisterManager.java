@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 public class RegisterManager {
     private HashMap<String, TypeRegisterPair> registers = new HashMap<>();
@@ -8,9 +10,9 @@ public class RegisterManager {
         this.registerCounter = 0;
     }
 
-    public TypeRegisterPair allocateRegister(String id, String type, String VTableRef, String VTableType, int size, int offset){
+    public TypeRegisterPair allocateRegister(String id, String type, String VTableRef, String VTableType, int size, int offset, String argumentId){
         type = DatatypeMapper.datatypeToLLVM(type);
-        TypeRegisterPair reg = allocateRegister(type);
+        TypeRegisterPair reg = allocateRegister(type, argumentId);
         reg.setVTableRef(VTableRef);
         reg.setVTableType(VTableType);
         reg.setSize(size);
@@ -19,19 +21,36 @@ public class RegisterManager {
         return reg;
     }
 
-    public TypeRegisterPair allocateRegister(String id, String type){
+    public TypeRegisterPair allocateRegister(String id, String type, SymbolTable st, String argumentId){
+        Class c = st.getClassTable().get(type);
+
+        if(c != null) {
+            if (c.getMethods().containsKey("main")) {
+                return new TypeRegisterPair("i8", id);
+            }
+            String VTableRef = c.getVTableRef();
+            String VTableType = c.getVTableType();
+            return allocateRegister(id, type, VTableRef, VTableType, c.size(), 0, argumentId);
+        }
+
         type = DatatypeMapper.datatypeToLLVM(type);
-        TypeRegisterPair reg = allocateRegister(type);
+        TypeRegisterPair reg = allocateRegister(type, argumentId);
         registers.put(id, reg);
         return reg;
     }
 
-    public TypeRegisterPair allocateRegister(String type){
+    public TypeRegisterPair allocateRegister(String type, String argumentId){
         type = DatatypeMapper.datatypeToLLVM(type);
         String ref = reference(type);
-        System.out.println("\t" + currentReg() + " = alloca " + type);
-        System.out.println("\tstore " + type + " " + DatatypeMapper.datatypeToDefaultVal(type) + ", " + ref + " " + currentReg());
-        return new TypeRegisterPair(ref, "%_" + registerCounter++);
+
+        if(argumentId != null){
+            return new TypeRegisterPair(type, "%" + argumentId);
+        }
+        String registerName = "%_" + registerCounter++;
+
+        System.out.println("\t" + registerName + " = alloca " + type);
+        System.out.println("\tstore " + type + " " + DatatypeMapper.datatypeToDefaultVal(type) + ", " + ref + " " + registerName);
+        return new TypeRegisterPair(ref, registerName);
     }
 
     public TypeRegisterPair allocateRegisterWithValue(String type, String value){
@@ -58,6 +77,9 @@ public class RegisterManager {
     }
 
     public void storeInRegister(TypeRegisterPair left, TypeRegisterPair right){
+        System.err.println(left.getType());
+        System.err.println(right.getType());
+
         if(right.getType().equals(left.getType())){
             right = loadRegister(right);
         }
@@ -92,6 +114,8 @@ public class RegisterManager {
     }
 
     public TypeRegisterPair calloc(String type, TypeRegisterPair size){
+        type = DatatypeMapper.datatypeToLLVM(type);
+
         /**
          * Classes
          */
@@ -236,6 +260,23 @@ public class RegisterManager {
         System.out.println();
 
         return new TypeRegisterPair(null, "%label" + registerCounter++);
+    }
+
+    public TypeRegisterPair methodCall(TypeRegisterPair c, TypeRegisterPair m, ArrayList<TypeRegisterPair> expressions){
+        c = loadRegister(c);
+        expressions = new ArrayList<>(expressions.stream().map(this::loadRegister).collect(Collectors.toList()));
+        System.out.println("\t%_" + registerCounter++ + " = bitcast i8* " + c.getRegister() + " to i8***");
+        System.out.println("\t%_" + registerCounter + " = load i8**, i8*** %_" + (registerCounter++-1));
+        System.out.println("\t%_" + registerCounter + " = getelementptr i8*, i8** %_" + (registerCounter++-1) + ", i32 " + m.getOffset()/8);
+        System.out.println("\t%_" + registerCounter + " = load i8*, i8** %_" + (registerCounter++-1));
+        System.out.print("\t%_" + registerCounter + " = bitcast i8* %_" + (registerCounter++-1) + " to " + m.getMethodReturnType() + " (i8*");
+        expressions.forEach(e -> System.out.print("," + e.getType()));
+        System.out.println(")*");
+        System.out.print("\t" + currentReg() + " = call " + m.getMethodReturnType() + " %_" + (registerCounter-1) + "(i8* " + c.getRegister());
+        expressions.forEach(e -> System.out.print("," + e.getType() + " " + e.getRegister()));
+        System.out.println(")");
+
+        return new TypeRegisterPair(m.getMethodReturnType(), "%_" + registerCounter++);
     }
 
     public TypeRegisterPair getRegisterFromID(String id){
