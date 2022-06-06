@@ -1,3 +1,5 @@
+import syntaxtree.Type;
+
 public class TypeRegisterPair {
     private String type;
     private String register;
@@ -10,6 +12,17 @@ public class TypeRegisterPair {
 
     public TypeRegisterPair(){
 
+    }
+
+    public TypeRegisterPair(TypeRegisterPair typeRegisterPair){
+        this.type = typeRegisterPair.type;
+        this.register = typeRegisterPair.register;
+        this.VTableRef = typeRegisterPair.VTableRef;
+        this.VTableType = typeRegisterPair.VTableType;
+        this.methodReturnType = typeRegisterPair.methodReturnType;
+        this.method = typeRegisterPair.method;
+        this.size = typeRegisterPair.size;
+        this.offset = typeRegisterPair.offset;
     }
 
     public TypeRegisterPair(String type, String register){
@@ -33,8 +46,10 @@ public class TypeRegisterPair {
         this.VTableType = c.getVTableType();
         this.offset = offset;
         this.size = c.size();
-        this.method = c.getMethods().get(register);
-        this.methodReturnType = DatatypeMapper.datatypeToLLVM(method.getReturnType());
+        if(c.getMethods().containsKey(register)) {
+            this.method = c.getMethods().get(register);
+            this.methodReturnType = DatatypeMapper.datatypeToLLVM(method.getReturnType());
+        }
     }
 
     public String getType() {

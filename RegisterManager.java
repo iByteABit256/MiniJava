@@ -5,10 +5,22 @@ public class RegisterManager {
     private HashMap<String, TypeRegisterPair> registers = new HashMap<>();
     private int registerCounter;
     private Emitter emitter;
+    private SymbolTable st;
 
-    public RegisterManager(Emitter emitter){
+    public RegisterManager(SymbolTable st){
         this.registerCounter = 0;
-        this.emitter = emitter;
+        this.st = st;
+        this.emitter = st.getEmitter();
+    }
+
+    public TypeRegisterPair getClassField(String id, int offset, String type, Class c){
+        String ref = reference(type);
+        emitter.emitln("\t%_" + registerCounter++ + " = getelementptr i8, i8* %this, i32 " + (offset+8));
+        emitter.emitln("\t" + currentReg() + " = bitcast i8* %_" + (registerCounter-1) + " to " + ref);
+        TypeRegisterPair reg = new TypeRegisterPair(ref, "%_" + registerCounter++, c, 0);
+        registers.put(id, reg);
+
+        return reg;
     }
 
     public TypeRegisterPair getClassField(String id, int offset, String type){
@@ -84,7 +96,10 @@ public class RegisterManager {
 
         String reg = typeRegisterPair.getRegister();
         emitter.emitln("\t" + currentReg() + " = load " + dereferencedType + ", " + type + " " + reg);
-        return new TypeRegisterPair(dereferencedType, "%_" + registerCounter++);
+        TypeRegisterPair res = new TypeRegisterPair(typeRegisterPair);
+        res.setType(dereferencedType);
+        res.setRegister("%_" + registerCounter++);
+        return res;
     }
 
     public void storeInRegister(TypeRegisterPair left, TypeRegisterPair right){
@@ -319,7 +334,15 @@ public class RegisterManager {
         expressions.forEach(e -> emitter.emit("," + e.getType() + " " + e.getRegister()));
         emitter.emitln(")");
 
-        return new TypeRegisterPair(m.getMethodReturnType(), "%_" + registerCounter++);
+        TypeRegisterPair res = new TypeRegisterPair(m.getMethodReturnType(), "%_" + registerCounter++);
+        Class returnedClass = st.getClassTable().get(method.getReturnType());
+        if (returnedClass != null) {
+            res.setVTableRef(returnedClass.getVTableRef());
+            res.setVTableType(returnedClass.getVTableType());
+            res.setSize(returnedClass.size());
+            res.setOffset(0);
+        }
+        return res;
     }
 
     public TypeRegisterPair getRegisterFromID(String id){
