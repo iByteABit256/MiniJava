@@ -4,9 +4,21 @@ import java.util.HashMap;
 public class RegisterManager {
     private HashMap<String, TypeRegisterPair> registers = new HashMap<>();
     private int registerCounter;
+    private Emitter emitter;
 
-    public RegisterManager(){
+    public RegisterManager(Emitter emitter){
         this.registerCounter = 0;
+        this.emitter = emitter;
+    }
+
+    public TypeRegisterPair getClassField(String id, int offset, String type){
+        String ref = reference(type);
+        emitter.emitln("\t%_" + registerCounter++ + " = getelementptr i8, i8* %this, i32 " + (offset+8));
+        emitter.emitln("\t" + currentReg() + " = bitcast i8* %_" + (registerCounter-1) + " to " + ref);
+        TypeRegisterPair reg = new TypeRegisterPair(ref, "%_" + registerCounter++);
+        registers.put(id, reg);
+
+        return reg;
     }
 
     public TypeRegisterPair allocateRegister(String id, String type, String VTableRef, String VTableType, int size, int offset, String argumentId){
@@ -47,16 +59,16 @@ public class RegisterManager {
         }
         String registerName = "%_" + registerCounter++;
 
-        System.out.println("\t" + registerName + " = alloca " + type);
-        System.out.println("\tstore " + type + " " + DatatypeMapper.datatypeToDefaultVal(type) + ", " + ref + " " + registerName);
+        emitter.emitln("\t" + registerName + " = alloca " + type);
+        emitter.emitln("\tstore " + type + " " + DatatypeMapper.datatypeToDefaultVal(type) + ", " + ref + " " + registerName);
         return new TypeRegisterPair(ref, registerName);
     }
 
     public TypeRegisterPair allocateRegisterWithValue(String type, String value){
         type = DatatypeMapper.datatypeToLLVM(type);
         String ref = reference(type);
-        System.out.println("\t" + currentReg() + " = alloca " + type);
-        System.out.println("\tstore " + type + " " + value + ", " + ref + " " + currentReg());
+        emitter.emitln("\t" + currentReg() + " = alloca " + type);
+        emitter.emitln("\tstore " + type + " " + value + ", " + ref + " " + currentReg());
         return new TypeRegisterPair(ref, "%_" + registerCounter++);
     }
 
@@ -71,18 +83,15 @@ public class RegisterManager {
         String dereferencedType = dereference(type);
 
         String reg = typeRegisterPair.getRegister();
-        System.out.println("\t" + currentReg() + " = load " + dereferencedType + ", " + type + " " + reg);
+        emitter.emitln("\t" + currentReg() + " = load " + dereferencedType + ", " + type + " " + reg);
         return new TypeRegisterPair(dereferencedType, "%_" + registerCounter++);
     }
 
     public void storeInRegister(TypeRegisterPair left, TypeRegisterPair right){
-        System.err.println(left.getType());
-        System.err.println(right.getType());
-
         if(right.getType().equals(left.getType())){
             right = loadRegister(right);
         }
-        System.out.println("\tstore " + right.getType() + " " + right.getRegister() + ", " + reference(right.getType()) + " " + left.getRegister());
+        emitter.emitln("\tstore " + right.getType() + " " + right.getRegister() + ", " + reference(right.getType()) + " " + left.getRegister());
     }
 
     public TypeRegisterPair addRegisters(TypeRegisterPair left, TypeRegisterPair right){
@@ -94,7 +103,7 @@ public class RegisterManager {
         if(right.getType().contains("*")) {
             loadedRight = loadRegister(right);
         }
-        System.out.println("\t" + currentReg() + " = add " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
+        emitter.emitln("\t" + currentReg() + " = add " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
         return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
     }
 
@@ -107,7 +116,7 @@ public class RegisterManager {
         if(right.getType().contains("*")) {
             loadedRight = loadRegister(right);
         }
-        System.out.println("\t" + currentReg() + " = sub " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
+        emitter.emitln("\t" + currentReg() + " = sub " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
         return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
     }
 
@@ -120,7 +129,7 @@ public class RegisterManager {
         if(right.getType().contains("*")) {
             loadedRight = loadRegister(right);
         }
-        System.out.println("\t" + currentReg() + " = mul " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
+        emitter.emitln("\t" + currentReg() + " = mul " + loadedLeft.getType() + " " + loadedLeft.getRegister() + ", " + loadedRight.getRegister());
         return new TypeRegisterPair(loadedLeft.getType(), "%_" + registerCounter++);
     }
 
@@ -129,7 +138,7 @@ public class RegisterManager {
         if(reg.getType().contains("*")) {
             loaded = loadRegister(reg);
         }
-        System.out.println("\t" + currentReg() + " = xor " + loaded.getType() + " " + loaded.getRegister() + ", true");
+        emitter.emitln("\t" + currentReg() + " = xor " + loaded.getType() + " " + loaded.getRegister() + ", true");
         return new TypeRegisterPair(loaded.getType(), "%_" + registerCounter++);
     }
 
@@ -141,11 +150,11 @@ public class RegisterManager {
          */
         if(type.equals("i8")) {
             String registerToAllocateTo = currentReg();
-            System.out.println("\t%_" + registerCounter++ + " = call i8* @calloc(i32 1, i32 " + size.getSize() + ")");
-            System.out.println("\t%_" + registerCounter + " = bitcast i8* %_" + (registerCounter++ - 1) + " to i8***");
-            System.out.println("\t%_" + registerCounter++ + " = getelementptr " + size.getVTableType() + ", "
+            emitter.emitln("\t%_" + registerCounter++ + " = call i8* @calloc(i32 1, i32 " + size.getSize() + ")");
+            emitter.emitln("\t%_" + registerCounter + " = bitcast i8* %_" + (registerCounter++ - 1) + " to i8***");
+            emitter.emitln("\t%_" + registerCounter++ + " = getelementptr " + size.getVTableType() + ", "
                     + reference(size.getVTableType()) + " " + size.getVTableRef() + ", i32 0, i32 0");
-            System.out.println("\tstore i8** %_" + (registerCounter - 1) + ", i8*** %_" + (registerCounter++ - 2));
+            emitter.emitln("\tstore i8** %_" + (registerCounter - 1) + ", i8*** %_" + (registerCounter++ - 2));
 
             return new TypeRegisterPair("i8*", registerToAllocateTo);
         }
@@ -156,20 +165,20 @@ public class RegisterManager {
         if(size.getType().contains("*")) {
             size = loadRegister(size);
         }
-        System.out.println("\t" + currentReg() + " = add i32 " + size.getRegister() + ", " + (type.equals("i1")? 4 : 1));
+        emitter.emitln("\t" + currentReg() + " = add i32 " + size.getRegister() + ", " + (type.equals("i1")? 4 : 1));
         TypeRegisterPair total = new TypeRegisterPair("i32", "%_" + registerCounter++);
-        System.out.println("\t%_" + registerCounter++ + " = call i8* @calloc(i32 " +
+        emitter.emitln("\t%_" + registerCounter++ + " = call i8* @calloc(i32 " +
                 DatatypeMapper.datatypeToBytes(dereference(type)) + ", i32 " + total.getRegister() + ")");
-        System.out.println("\t" + currentReg() + " = bitcast i8* %_" + (registerCounter-1) + " to " + reference(type));
+        emitter.emitln("\t" + currentReg() + " = bitcast i8* %_" + (registerCounter-1) + " to " + reference(type));
 
         // Size metadata
         if(type.equals("i1")){
-            System.out.println("\t%_" + ++registerCounter + " = bitcast i1* %_" + (registerCounter-1) + " to i32*");
-            System.out.println("\tstore i32 " + size.getRegister() + ", i32* " + currentReg());
+            emitter.emitln("\t%_" + ++registerCounter + " = bitcast i1* %_" + (registerCounter-1) + " to i32*");
+            emitter.emitln("\tstore i32 " + size.getRegister() + ", i32* " + currentReg());
             return new TypeRegisterPair("i1*", "%_" + (registerCounter++-1));
         }
 
-        System.out.println("\tstore " + type + " " + size.getRegister() + ", " + reference(type) + " " + currentReg());
+        emitter.emitln("\tstore " + type + " " + size.getRegister() + ", " + reference(type) + " " + currentReg());
 
         return new TypeRegisterPair(reference(type), "%_" + registerCounter++);
     }
@@ -189,29 +198,29 @@ public class RegisterManager {
         TypeRegisterPair exit = ifStatement(condition, label1, label2);
 
         // Valid index
-        System.out.println(label1.getRegister().substring(1) + ":");
-        System.out.println("\t" + currentReg() + " = add i32 " + loadedIdx.getRegister() + ", " + (loadedArr.getType().equals("i1*")? 4 : 1));
+        emitter.emitln(label1.getRegister().substring(1) + ":");
+        emitter.emitln("\t" + currentReg() + " = add i32 " + loadedIdx.getRegister() + ", " + (loadedArr.getType().equals("i1*")? 4 : 1));
         loadedIdx = new TypeRegisterPair("i32", "%_" + registerCounter++);
         String type = loadedArr.getType();
         String dereferencedType = dereference(type);
-        System.out.println("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
+        emitter.emitln("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
                 type + " " + loadedArr.getRegister() + ", i32 " + loadedIdx.getRegister());
         String elementReg = "%_" + registerCounter++;
-        System.out.println("\tbr label " + exit.getRegister() + "\n");
+        emitter.emitln("\tbr label " + exit.getRegister() + "\n");
 
         // Invalid index
-        System.out.println(label2.getRegister().substring(1) + ":");
+        emitter.emitln(label2.getRegister().substring(1) + ":");
         handleOutOfBoundsException();
-        System.out.println("\tbr label " + exit.getRegister() + "\n");
+        emitter.emitln("\tbr label " + exit.getRegister() + "\n");
 
         // Continue execution
-        System.out.println(exit.getRegister().substring(1) + ":");
+        emitter.emitln(exit.getRegister().substring(1) + ":");
 
         return new TypeRegisterPair(type, elementReg);
     }
 
     public void handleOutOfBoundsException(){
-        System.out.println("\tcall void @throw_oob()");
+        emitter.emitln("\tcall void @throw_oob()");
     }
 
     public TypeRegisterPair getArrayLength(TypeRegisterPair arr){
@@ -219,13 +228,13 @@ public class RegisterManager {
         String type = loadedArr.getType();
 
         if(type.equals("i1*")){
-            System.out.println("\t%_" + registerCounter++ + " = bitcast i1* " + loadedArr.getRegister() + " to i32*");
-            System.out.println("\t" + currentReg() + " = getelementptr i32, i32* %_" + (registerCounter-1) + ", i32 0");
+            emitter.emitln("\t%_" + registerCounter++ + " = bitcast i1* " + loadedArr.getRegister() + " to i32*");
+            emitter.emitln("\t" + currentReg() + " = getelementptr i32, i32* %_" + (registerCounter-1) + ", i32 0");
             return new TypeRegisterPair("i32*", "%_" + registerCounter++);
         }
 
         String dereferencedType = dereference(type);
-        System.out.println("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
+        emitter.emitln("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
                 type + " " + loadedArr.getRegister() + ", i32 " + 0);
         return new TypeRegisterPair("i32*", "%_" + registerCounter++);
     }
@@ -238,7 +247,7 @@ public class RegisterManager {
             right = loadRegister(right);
         }
 
-        System.out.println("\t" + currentReg() + " = and i1 " + left.getRegister() + ", " + right.getRegister());
+        emitter.emitln("\t" + currentReg() + " = and i1 " + left.getRegister() + ", " + right.getRegister());
         return new TypeRegisterPair("i1", "%_" + registerCounter++);
     }
 
@@ -250,7 +259,7 @@ public class RegisterManager {
             right = loadRegister(right);
         }
 
-        System.out.println("\t" + currentReg() + " = icmp slt i32 " + left.getRegister() + ", " + right.getRegister());
+        emitter.emitln("\t" + currentReg() + " = icmp slt i32 " + left.getRegister() + ", " + right.getRegister());
         return new TypeRegisterPair("i1", "%_" + registerCounter++);
     }
 
@@ -262,8 +271,8 @@ public class RegisterManager {
         label1.setRegister("%label" + registerCounter++);
         label2.setRegister("%label" + registerCounter++);
 
-        System.out.println("\tbr i1 " + condition.getRegister() + ", label " + label1.getRegister() + ", label " + label2.getRegister());
-        System.out.println();
+        emitter.emitln("\tbr i1 " + condition.getRegister() + ", label " + label1.getRegister() + ", label " + label2.getRegister());
+        emitter.emitln();
 
         return new TypeRegisterPair(null, "%label" + registerCounter++);
     }
@@ -273,16 +282,16 @@ public class RegisterManager {
             condition = loadRegister(condition);
         }
 
-        System.out.println("\tbr i1 " + condition.getRegister() + ", label " + body.getRegister() + ", label " + exit.getRegister());
-        System.out.println();
+        emitter.emitln("\tbr i1 " + condition.getRegister() + ", label " + body.getRegister() + ", label " + exit.getRegister());
+        emitter.emitln();
     }
 
     public TypeRegisterPair whileStatement(TypeRegisterPair conditionCheck, TypeRegisterPair body){
         conditionCheck.setRegister("%label" + registerCounter++);
         body.setRegister("%label" + registerCounter++);
 
-        System.out.println("\tbr label " + conditionCheck.getRegister());
-        System.out.println();
+        emitter.emitln("\tbr label " + conditionCheck.getRegister());
+        emitter.emitln();
 
         return new TypeRegisterPair(null, "%label" + registerCounter++);
     }
@@ -298,16 +307,17 @@ public class RegisterManager {
                 expressions.set(i, loadRegister(expressions.get(i)));
             }
         }
-        System.out.println("\t%_" + registerCounter++ + " = bitcast i8* " + c.getRegister() + " to i8***");
-        System.out.println("\t%_" + registerCounter + " = load i8**, i8*** %_" + (registerCounter++-1));
-        System.out.println("\t%_" + registerCounter + " = getelementptr i8*, i8** %_" + (registerCounter++-1) + ", i32 " + m.getOffset()/8);
-        System.out.println("\t%_" + registerCounter + " = load i8*, i8** %_" + (registerCounter++-1));
-        System.out.print("\t%_" + registerCounter + " = bitcast i8* %_" + (registerCounter++-1) + " to " + m.getMethodReturnType() + " (i8*");
-        expressions.forEach(e -> System.out.print("," + e.getType()));
-        System.out.println(")*");
-        System.out.print("\t" + currentReg() + " = call " + m.getMethodReturnType() + " %_" + (registerCounter-1) + "(i8* " + c.getRegister());
-        expressions.forEach(e -> System.out.print("," + e.getType() + " " + e.getRegister()));
-        System.out.println(")");
+        emitter.emitln("\n\t;" + m.getVTableRef() + "." + method.getName()  + " : " + m.getOffset()/8);
+        emitter.emitln("\t%_" + registerCounter++ + " = bitcast i8* " + c.getRegister() + " to i8***");
+        emitter.emitln("\t%_" + registerCounter + " = load i8**, i8*** %_" + (registerCounter++-1));
+        emitter.emitln("\t%_" + registerCounter + " = getelementptr i8*, i8** %_" + (registerCounter++-1) + ", i32 " + m.getOffset()/8);
+        emitter.emitln("\t%_" + registerCounter + " = load i8*, i8** %_" + (registerCounter++-1));
+        emitter.emit("\t%_" + registerCounter + " = bitcast i8* %_" + (registerCounter++-1) + " to " + m.getMethodReturnType() + " (i8*");
+        expressions.forEach(e -> emitter.emit("," + e.getType()));
+        emitter.emitln(")*");
+        emitter.emit("\t" + currentReg() + " = call " + m.getMethodReturnType() + " %_" + (registerCounter-1) + "(i8* " + c.getRegister());
+        expressions.forEach(e -> emitter.emit("," + e.getType() + " " + e.getRegister()));
+        emitter.emitln(")");
 
         return new TypeRegisterPair(m.getMethodReturnType(), "%_" + registerCounter++);
     }
@@ -320,7 +330,7 @@ public class RegisterManager {
         if(typeRegisterPair.getType().contains("*")){
             typeRegisterPair = loadRegister(typeRegisterPair);
         }
-        System.out.println("\tcall void (i32) @print_int(i32 " + typeRegisterPair.getRegister() + ")");
+        emitter.emitln("\tcall void (i32) @print_int(i32 " + typeRegisterPair.getRegister() + ")");
     }
 
     private String dereference(String type){

@@ -3,6 +3,7 @@ import java.util.LinkedHashMap;
 public class SymbolTable {
 
     private LinkedHashMap<String, Class> classTable = new LinkedHashMap<>();
+    private Emitter emitter;
 
     public SymbolTable(){
 
@@ -19,19 +20,26 @@ public class SymbolTable {
     public void showClassTable(){
         this.classTable.entrySet().forEach(c -> {
             if(!c.getValue().getMethods().containsKey("main")){
-                System.out.print(c.getValue());
+                emitter.emit(c.getValue());
             }
         });
     }
 
     public void showVTable(){
         this.classTable.values().forEach(c -> {
+            c.setVTableEntry();
             if(!c.getMethods().containsKey("main")) {
-                c.setVTableEntry();
-                System.out.println(c.getVTableEntry());
+                emitter.emitln(c.getVTableEntry());
             }
         });
-        System.out.println();
+        emitter.emitln();
     }
 
+    public Emitter getEmitter() {
+        return emitter;
+    }
+
+    public void setEmitter(Emitter emitter) {
+        this.emitter = emitter;
+    }
 }

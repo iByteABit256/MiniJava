@@ -1,11 +1,12 @@
 
-            ----------------------------------
+     --------------------------------------------------------
                     Compilers Project 2 & 3
                             ---
-            MiniJava Storage and Type Checking
+            Project2: MiniJava Storage and Type Checking
+            Project3: MiniJava to LLVM compiler
                             ---
-            by  Pavlos Smith - sdi1800181
-            ----------------------------------
+                by  Pavlos Smith - sdi1800181
+     --------------------------------------------------------
 
 
                         Instructions
@@ -15,10 +16,114 @@ Compilation:
 > make
 
 Execution:
-> java -classpath out/production/MiniJava/ Main [inputFiles]
+> java -classpath out/production/MiniJava/ Main [-st|-llvm|-o=<OUTPUT_FILE>] [inputFiles]
+
+Flags:
+-st: shows symbol table output
+-llvm: compiles to llvm
+-o: output file to store produced llvm file in
+    (Output is printed in standard output if flag is absent)
+
+Examples:
+> java -classpath out/production/MiniJava/ Main -st myInputFile.java
+> java -classpath out/production/MiniJava/ Main -llvm -o=outputs/myInputFile.ll myInputFile.java
+> java -classpath out/production/MiniJava/ Main -llvm myInputFile.java
 
 Cleanup:
 > make clean
+
+Notes:
+The .jar files for the javacc and jtb tools must
+be in a ./lib directory.
+
+
+
+                      Explanation
+                     -------------
+
+Project 3
+----------
+
+
+    Notes
+   -------
+
+- Registers are named like '%_i' where 'i' is the current
+register number in the Register Manager. Exceptions to this are
+method arguments and the 'this' keyword, since they are named
+as '%argName' and '%this' respectively.
+
+- Labels used for if statements and while loops are called
+'label<i>' where '<i>' is the current register number.
+
+- On integer and boolean arrays, 4 extra bytes are allocated
+in order to store a length integer in them for use with the
+'.length' operator.
+
+
+    Class (continued)
+   -------------------
+
+Stores its VTable representation and calls the VTable setters on Method.
+
+
+    DatatypeMapper (continued)
+   ----------------------------
+
+Returns default value according to LLVM type.
+
+
+    Emitter
+   ---------
+
+Imitates some PrintStream methods to use with Writer.
+
+
+    InputParser
+   -------------
+
+Reads command line input and parses the flags and arguments.
+
+
+    LLVMVisitor
+   -------------
+
+Visits all the nodes of the parse tree and generates the
+relevant LLVM code for each one.
+
+
+    Method (continued)
+   --------------------
+
+Stores its VTable representation.
+
+
+    RegisterManager
+   -----------------
+
+Keeps track of the assigned registers and does the
+main processing with helper methods for most nodes of
+the parse tree.
+
+
+    SymbolTable (continued)
+   -------------------------
+
+Prints the VTable.
+
+
+    TypeRegisterPair
+   ------------------
+
+Stores a <String:Type, String:Register> pair along with
+other information that are needed in some instances.
+Specifically, it can also store a VTable reference and type,
+a method return type, a Method object, sizes, and offsets.
+
+
+
+Project 2
+----------
 
 
                       Checks implemented
@@ -53,9 +158,6 @@ Cleanup:
  * Only ints are printable
  * Identifier was declared
 
-
-                      Explanation
-                     -------------
 
     Class
    -------

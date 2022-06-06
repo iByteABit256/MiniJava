@@ -1,3 +1,7 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -8,6 +12,7 @@ public class InputParser {
     private ArrayList<String> files = new ArrayList<>();
     private boolean showSymbolTable = false;
     private boolean showLLVM = false;
+    private Writer writer;
 
     public boolean getShowSymbolTable() {
         return showSymbolTable;
@@ -21,53 +26,52 @@ public class InputParser {
         return files;
     }
 
-    public InputParser(String[] args){
+    public InputParser(String[] args) throws IOException {
         HashMap<String, String> params = new HashMap<>();
-        Pattern pattern = Pattern.compile("-[a-zA-Z]+");
 
         if(args.length == 0){
             handleInputArgumentError("Usage: java Main <inputFiles>");
         }
 
-        int i = 0;
-        while(i < args.length){
+        for(int i = 0; i < args.length; i++){
             String arg = args[i];
 
-            if(pattern.matcher(arg).matches()){
+            if(arg.startsWith("-")){
                 if(arg.length() < 2){
                     handleInputArgumentError(null);
                 }
 
-                if(i+1 < args.length){
-                    String opt = args[i+1];
-                    if(pattern.matcher(opt).matches()){
-                        i++;
-                        continue;
+                if(arg.contains("=")){
+                    String[] opt = arg.split("=");
+                    if(opt[1].isEmpty()){
+                        handleInputArgumentError("No option passed to " + opt[0]);
                     }
-                    params.put(arg, opt);
-                    i++;
+                    params.put(opt[0], opt[1]);
                     continue;
                 }
                 params.put(arg, "");
-                i += 2;
             }else{
                 if(Files.notExists(Paths.get(arg))){
                     handleInputArgumentError("File '" + arg + "' does not exist");
                 }
                 files.add(arg);
-                i++;
             }
         }
 
         setFlags(params);
     }
 
-    private void setFlags(HashMap<String, String> params){
+    private void setFlags(HashMap<String, String> params) throws IOException {
         if(params.containsKey("-st")){
             showSymbolTable = true;
         }
         if(params.containsKey("-llvm")){
             showLLVM = true;
+        }
+        if(params.containsKey("-o")){
+            writer = new FileWriter(params.get("-o"));
+        }else{
+            writer = new OutputStreamWriter(System.out);
         }
     }
 
@@ -78,5 +82,9 @@ public class InputParser {
             System.err.println("Invalid input arguments");
         }
         System.exit(1);
+    }
+
+    public Writer getWriter() {
+        return writer;
     }
 }

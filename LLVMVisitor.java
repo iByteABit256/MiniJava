@@ -9,12 +9,13 @@ import java.util.Vector;
 public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     private SymbolTable st;
     private ContextManager cm = new ContextManager();
-    private RegisterManager rm = new RegisterManager();
+    private RegisterManager rm;
 
     public LLVMVisitor(SymbolTable st){
         this.st = st;
+        rm = new RegisterManager(st.getEmitter());
 
-        System.out.print(
+        st.getEmitter().emit(
             "declare i8* @calloc(i32, i32)\n"+
             "declare i32 @printf(i8*, ...)\n"+
             "declare void @exit(i32)\n\n"+
@@ -67,7 +68,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         Method main = mainClass.getMethods().get("main");
         cm.enterContext(main);
 
-        System.out.println("define i32 @main(i8* %this)\n{");
+        st.getEmitter().emitln("define i32 @main(i8* %this)\n{");
 
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
@@ -83,7 +84,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         n.f15.accept(this, argu);
         n.f16.accept(this, argu);
 
-        System.out.println("\tret i32 0\n}\n");
+        st.getEmitter().emitln("\tret i32 0\n}\n");
 
         cm.leaveContext();
         rm.reset();
@@ -168,8 +169,8 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         cm.enterContext(m);
 
         m.setLLVM_method_head();
-        System.out.println(m.getLLVM_method_head());
-        System.out.println("{");
+        st.getEmitter().emitln(m.getLLVM_method_head());
+        st.getEmitter().emitln("{");
 
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
@@ -190,8 +191,8 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
 
-        System.out.println("\tret " + typeRegisterPair.getType() + " " + typeRegisterPair.getRegister());
-        System.out.println("}\n");
+        st.getEmitter().emitln("\tret " + typeRegisterPair.getType() + " " + typeRegisterPair.getRegister());
+        st.getEmitter().emitln("}\n");
         cm.leaveContext();
         rm.reset();
 
@@ -398,15 +399,15 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         TypeRegisterPair label2 = new TypeRegisterPair();
         TypeRegisterPair exit = rm.ifStatement(condition, label1, label2);
 
-        System.out.println(label1.getRegister().substring(1) + ":");
+        st.getEmitter().emitln(label1.getRegister().substring(1) + ":");
         n.f4.accept(this, argu);
-        System.out.println("\tbr label " + exit.getRegister() + "\n");
+        st.getEmitter().emitln("\tbr label " + exit.getRegister() + "\n");
 
-        System.out.println(label2.getRegister().substring(1) + ":");
+        st.getEmitter().emitln(label2.getRegister().substring(1) + ":");
         n.f6.accept(this, argu);
-        System.out.println("\tbr label " + exit.getRegister() + "\n");
+        st.getEmitter().emitln("\tbr label " + exit.getRegister() + "\n");
 
-        System.out.println(exit.getRegister().substring(1) + ":");
+        st.getEmitter().emitln(exit.getRegister().substring(1) + ":");
 
         return null;
     }
@@ -424,15 +425,15 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         TypeRegisterPair body = new TypeRegisterPair();
         TypeRegisterPair exit = rm.whileStatement(conditionCheck, body);
 
-        System.out.println(conditionCheck.getRegister().substring(1) + ":");
+        st.getEmitter().emitln(conditionCheck.getRegister().substring(1) + ":");
         TypeRegisterPair condition = (TypeRegisterPair) n.f2.accept(this, argu);
         rm.loopConditionCheck(condition, body, exit);
 
-        System.out.println(body.getRegister().substring(1) + ":");
+        st.getEmitter().emitln(body.getRegister().substring(1) + ":");
         n.f4.accept(this, argu);
-        System.out.println("\tbr label " + conditionCheck.getRegister() + "\n");
+        st.getEmitter().emitln("\tbr label " + conditionCheck.getRegister() + "\n");
 
-        System.out.println(exit.getRegister().substring(1) + ":");
+        st.getEmitter().emitln(exit.getRegister().substring(1) + ":");
 
         return null;
     }
@@ -567,8 +568,6 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
     public Object visit(MessageSend n, Object argu) throws Exception {
         TypeRegisterPair c = (TypeRegisterPair) n.f0.accept(this, true);
         TypeRegisterPair m = (TypeRegisterPair) n.f2.accept(this, c.getVTableRef());
-        System.err.println(c.getVTableRef());
-        System.err.println(m.getMethodReturnType());
         ArrayList<TypeRegisterPair> expressions = n.f4.present()?
                 (ArrayList<TypeRegisterPair>) n.f4.accept(this, argu) : new ArrayList<>();
 
@@ -677,6 +676,12 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         if(reg != null){
             return reg;
         }
+        if(classContext != null){
+            reg = rm.getRegisterFromID(classContext.getVTableRef() + "." + id);
+            if(reg != null){
+                return reg;
+            }
+        }
 
         if(methodContext != null) {
             // Check if identifier is a method local variable or argument
@@ -689,9 +694,11 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
             HashMap<String, String> classFields = classContext.getFields();
             if(classFields.containsKey(id)) {
                 String VTableRef = classContext.getVTableRef();
-                String VTableType = classContext.getVTableType();
+//                String VTableType = classContext.getVTableType();
                 int offset = classContext.getFieldOffset(id);
-                return rm.allocateRegister(id, classFields.get(id), VTableRef, VTableType, classContext.size(), offset, null);
+                String type = DatatypeMapper.datatypeToLLVM(classContext.getFields().get(id));
+//                return rm.allocateRegister(id, classFields.get(id), VTableRef, VTableType, classContext.size(), offset, null);
+                return rm.getClassField(VTableRef + "." + id, offset, type);
             }
 
             // Check if identifier is a parent class field
@@ -699,10 +706,16 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
             while(parent != null){
                 HashMap<String, String> parentClassFields = parent.getFields();
                 if(parentClassFields.containsKey(id)) {
+//                    String VTableRef = parent.getVTableRef();
+//                    String VTableType = parent.getVTableType();
+//                    int offset = parent.getFieldOffset(id);
+//                    return rm.allocateRegister(id, parentClassFields.get(id), VTableRef, VTableType, parent.size(), offset, null);
                     String VTableRef = parent.getVTableRef();
-                    String VTableType = parent.getVTableType();
+//                String VTableType = classContext.getVTableType();
                     int offset = parent.getFieldOffset(id);
-                    return rm.allocateRegister(id, parentClassFields.get(id), VTableRef, VTableType, parent.size(), offset, null);
+                    String type = DatatypeMapper.datatypeToLLVM(parent.getFields().get(id));
+//                return rm.allocateRegister(id, classFields.get(id), VTableRef, VTableType, classContext.size(), offset, null);
+                    return rm.getClassField(VTableRef + "." + id, offset, type);
                 }
                 parent = parent.getParent();
             }
