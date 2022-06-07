@@ -68,7 +68,9 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         Method main = mainClass.getMethods().get("main");
         cm.enterContext(main);
 
-        st.getEmitter().emitln("define i32 @main(i8* %this)\n{");
+        main.setLLVM_method_head();
+        st.getEmitter().emitln(main.getLLVM_method_head());
+        st.getEmitter().emitln("{");
 
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
@@ -84,7 +86,7 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         n.f15.accept(this, argu);
         n.f16.accept(this, argu);
 
-        st.getEmitter().emitln("\tret i32 0\n}\n");
+        st.getEmitter().emitln("\tret void\n}\n");
 
         cm.leaveContext();
         rm.reset();
@@ -753,6 +755,10 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(ThisExpression n, Object argu) throws Exception {
+        TypeRegisterPair reg = rm.getRegisterFromID("this");
+        if(reg != null){
+            return reg;
+        }
         return rm.allocateRegister("this", cm.getClassCtx().getName(), st, "this");
     }
 

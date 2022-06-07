@@ -67,7 +67,12 @@ public class RegisterManager {
         String ref = reference(type);
 
         if(argumentId != null){
-            return new TypeRegisterPair(type, "%" + argumentId);
+            String registerName = "%." + argumentId;
+
+            emitter.emitln("\t" + registerName + " = alloca " + type);
+            emitter.emitln("\tstore " + type + " %" + argumentId + ", " + ref + " " + registerName);
+
+            return new TypeRegisterPair(ref, registerName);
         }
         String registerName = "%_" + registerCounter++;
 
