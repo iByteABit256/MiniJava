@@ -97,7 +97,6 @@ public class Class {
     }
 
     public void updateMethodOffsets(String str){
-        if(parentContainsMethod(str)) return;
         methodOffsets.put(str, currentMethodOffset);
         currentMethodOffset += DatatypeMapper.datatypeToBytes("method");
     }
@@ -132,7 +131,7 @@ public class Class {
 
     public void setVTableEntry() {
         ArrayList<Method> methods = new ArrayList<>(
-                getAllMethods().values().stream().filter(m -> !m.getName().equals("main")).collect(Collectors.toList()));
+                getAllMethods().values().stream().collect(Collectors.toList()));
         VTableEntry = "@." + name + "_vtable = global [" + methods.size() + " x i8*] [";
         for(int i = 0; i < methods.size(); i ++){
             methods.get(i).setVTableEntry();

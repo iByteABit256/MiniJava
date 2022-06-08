@@ -208,7 +208,9 @@ public class RegisterManager {
         if(idx.getType().contains("*")){
             loadedIdx = loadRegister(idx);
         }
-        TypeRegisterPair loadedArr = loadRegister(arr);
+        if(arr.getType().contains("**")){
+            arr = loadRegister(arr);
+        }
 
         // Check for index out of bounds
         TypeRegisterPair length = getArrayLength(arr);
@@ -219,12 +221,12 @@ public class RegisterManager {
 
         // Valid index
         emitter.emitln(label1.getRegister().substring(1) + ":");
-        emitter.emitln("\t" + currentReg() + " = add i32 " + loadedIdx.getRegister() + ", " + (loadedArr.getType().equals("i1*")? 4 : 1));
+        emitter.emitln("\t" + currentReg() + " = add i32 " + loadedIdx.getRegister() + ", " + (arr.getType().equals("i1*")? 4 : 1));
         loadedIdx = new TypeRegisterPair("i32", "%_" + registerCounter++);
-        String type = loadedArr.getType();
+        String type = arr.getType();
         String dereferencedType = dereference(type);
         emitter.emitln("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
-                type + " " + loadedArr.getRegister() + ", i32 " + loadedIdx.getRegister());
+                type + " " + arr.getRegister() + ", i32 " + loadedIdx.getRegister());
         String elementReg = "%_" + registerCounter++;
         emitter.emitln("\tbr label " + exit.getRegister() + "\n");
 
@@ -244,18 +246,20 @@ public class RegisterManager {
     }
 
     public TypeRegisterPair getArrayLength(TypeRegisterPair arr){
-        TypeRegisterPair loadedArr = loadRegister(arr);
-        String type = loadedArr.getType();
+        if(arr.getType().contains("**")) {
+            arr = loadRegister(arr);
+        }
+        String type = arr.getType();
 
         if(type.equals("i1*")){
-            emitter.emitln("\t%_" + registerCounter++ + " = bitcast i1* " + loadedArr.getRegister() + " to i32*");
+            emitter.emitln("\t%_" + registerCounter++ + " = bitcast i1* " + arr.getRegister() + " to i32*");
             emitter.emitln("\t" + currentReg() + " = getelementptr i32, i32* %_" + (registerCounter-1) + ", i32 0");
             return new TypeRegisterPair("i32*", "%_" + registerCounter++);
         }
 
         String dereferencedType = dereference(type);
         emitter.emitln("\t" + currentReg() + " = getelementptr " + dereferencedType + ", " +
-                type + " " + loadedArr.getRegister() + ", i32 " + 0);
+                type + " " + arr.getRegister() + ", i32 " + 0);
         return new TypeRegisterPair("i32*", "%_" + registerCounter++);
     }
 

@@ -22,3 +22,4 @@
 !LLVMVisitor.java
 !TypeRegisterPair.java
 !RegisterManager.java
+!Emitter.java

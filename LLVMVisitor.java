@@ -1,9 +1,8 @@
-import syntaxtree.*;
-import visitor.GJDepthFirst;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
+import syntaxtree.*;
+import visitor.GJDepthFirst;
 
 
 public class LLVMVisitor extends GJDepthFirst<Object, Object> {
@@ -672,6 +671,13 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
         if(callingClass != null){
             String className = callingClass.replaceAll("(@.|_vtable)", "");
             Class c = st.getClassTable().get(className);
+            while(c != null){
+                if(c.getMethods().containsKey(id)){
+                    break;
+                }
+                c = c.getParent();
+            }
+
             TypeRegisterPair method = new TypeRegisterPair("i8*", id, c, c.getMethodOffset(id));
             return method;
         }
@@ -755,11 +761,14 @@ public class LLVMVisitor extends GJDepthFirst<Object, Object> {
      */
     @Override
     public Object visit(ThisExpression n, Object argu) throws Exception {
-        TypeRegisterPair reg = rm.getRegisterFromID("this");
-        if(reg != null){
-            return reg;
-        }
-        return rm.allocateRegister("this", cm.getClassCtx().getName(), st, "this");
+        Class c = cm.getClassCtx();
+        TypeRegisterPair reg = new TypeRegisterPair("i8*", "%this");
+        reg.setVTableRef(c.getVTableRef());
+        reg.setVTableType(c.getVTableType());
+        reg.setSize(c.size());
+        reg.setOffset(0);
+
+        return reg;
     }
 
     /**

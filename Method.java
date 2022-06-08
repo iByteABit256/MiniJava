@@ -9,7 +9,7 @@ public class Method {
     private String returnType;
     private LinkedHashMap<String, String> argumentTypes = new LinkedHashMap<>();
     private LinkedHashMap<String, String> localVariableTypes = new LinkedHashMap<>();
-    private String VTableEntry; // Maybe unnecessary to store in variable
+    private String VTableEntry;
     private String LLVM_method_head;
     private String LLVM_method_body;
 
