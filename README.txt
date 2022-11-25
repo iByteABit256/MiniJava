@@ -5,7 +5,7 @@
             Project2: MiniJava Storage and Type Checking
             Project3: MiniJava to LLVM compiler
                             ---
-                by  Pavlos Smith - sdi1800181
+                    by  Pavlos Smith
      --------------------------------------------------------
 
 
